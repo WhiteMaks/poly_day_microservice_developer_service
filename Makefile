@@ -14,7 +14,7 @@ up-test-environment:
 	sleep 60
 
 migrate-db:
-	docker run --rm -v $(shell pwd)/database/migrations:/migrations --network host migrate/migrate -path=/migrations/ -database postgres://user:password@localhost:25432/authenticate?sslmode=disable up
+	docker run --rm -v $(shell pwd)/database/migrations:/migrations --network host migrate/migrate -path=/migrations/ -database postgres://user:password@localhost:25432/developer_service?sslmode=disable up
 
 test:
 	go clean -testcache && go test -cover -v ./...
