@@ -36,7 +36,7 @@ func (ms *Microservice) Start() error {
 	}
 
 	dbDeveloper, err := ms.store.GetMaxUserIdFromDevelopers(context.Background())
-	if err != nil {
+	if err != nil && err.Error() != "sql: no rows in result set" {
 		return err
 	}
 
