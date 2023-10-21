@@ -19,7 +19,7 @@ var (
 )
 
 func main() {
-	msName := schema.PathMsAuthenticate
+	msName := schema.PathMsDeveloperService
 
 	logDefault := logger.NewDefaultLogger(logger.DEBUG)
 	logGelf := logger.NewGelf(logDefault, gelfConStr)
