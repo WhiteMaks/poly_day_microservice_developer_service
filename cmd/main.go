@@ -8,6 +8,8 @@ import (
 	"os"
 	"poly_day_microservice_developer_service/autogenerate/database"
 	"poly_day_microservice_developer_service/microservice"
+
+	_ "github.com/lib/pq"
 )
 
 var (
