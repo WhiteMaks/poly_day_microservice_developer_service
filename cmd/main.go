@@ -61,4 +61,6 @@ func main() {
 		)
 		return
 	}
+
+	select {}
 }
