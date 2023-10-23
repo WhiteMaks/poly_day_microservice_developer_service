@@ -19,3 +19,9 @@ DELETE FROM
 	root.releases
 WHERE
 	id = $1;
+
+-- name: GetReleases :many
+SELECT
+    *
+FROM
+    root.releases;
