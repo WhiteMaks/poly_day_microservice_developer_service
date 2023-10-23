@@ -35,12 +35,18 @@ func (ms *Microservice) Start() error {
 		return err
 	}
 
+	ms.log.Info(
+		logger.Message{
+			ShortMessage: "the developer synchronization process has begun",
+		},
+	)
+
 	dbDeveloper, err := ms.store.GetMaxUserIdFromDevelopers(context.Background())
 	if err != nil && err.Error() != "sql: no rows in result set" {
 		return err
 	}
 
-	developers10Response, err := ms.GetDevelopers10(dbDeveloper.UserID)
+	developers10Response, err := ms.getDevelopers10(dbDeveloper.UserID)
 	if err != nil {
 		return err
 	}
@@ -58,10 +64,16 @@ func (ms *Microservice) Start() error {
 		}
 	}
 
+	ms.log.Info(
+		logger.Message{
+			ShortMessage: fmt.Sprintf("the developer synchronization process is complete. Added [ %v ] new entries", len(developers)),
+		},
+	)
+
 	return nil
 }
 
-func (ms *Microservice) GetDevelopers10(fromUserId int64) (*schema.GetDevelopers10Response, error) {
+func (ms *Microservice) getDevelopers10(fromUserId int64) (*schema.GetDevelopers10Response, error) {
 	requestBodyStruct := schema.GetDevelopers10Request{
 		FromUserId: fromUserId,
 	}
@@ -106,12 +118,19 @@ func (ms *Microservice) rootMessageHandler(message schema.Message) {
 
 	methodName := schema.GenerateFullMethodNameFromMessage(message)
 
-	ms.log.Debug(
+	ms.log.Info(
 		logger.Message{
 			ShortMessage: fmt.Sprintf("received method name [ %v ] for further processing", methodName),
 		},
 	)
 
 	switch methodName {
+
+	case schema.CommandCreateRelease10:
+		{
+			go ms.createRelease10(message)
+			break
+		}
+
 	}
 }
