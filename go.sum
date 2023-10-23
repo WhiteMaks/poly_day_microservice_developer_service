@@ -1,5 +1,5 @@
-github.com/WhiteMaks/poly_day_bus_schema v0.0.9 h1:QDC99PMvlJqqlt+J718jvMtO3b6i4e828mkgfO1vPSc=
-github.com/WhiteMaks/poly_day_bus_schema v0.0.9/go.mod h1:zTKcsOMRt5Gd78NZXPn12JM2aTP0/w2KDzOghdhOUag=
+github.com/WhiteMaks/poly_day_bus_schema v0.1.0 h1:hGgNG72jdrte+v+Q+ATpsNVuDwe1jXAF0VyU4P0BP+U=
+github.com/WhiteMaks/poly_day_bus_schema v0.1.0/go.mod h1:zTKcsOMRt5Gd78NZXPn12JM2aTP0/w2KDzOghdhOUag=
 github.com/WhiteMaks/poly_day_logger v0.0.1 h1:CkrFE/6yH5B6qkCqAcjNcSL4yr0Vb134LvzjAhA5+fo=
 github.com/WhiteMaks/poly_day_logger v0.0.1/go.mod h1:8Uz5ByFcbyvAQYD841e4rlZzXB068N/b3FCBPCnhQWk=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
