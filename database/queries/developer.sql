@@ -5,6 +5,14 @@ VALUES
     ($1)
 RETURNING *;
 
+-- name: GetDeveloperById :one
+SELECT
+    *
+FROM
+    root.developers
+WHERE
+    user_id = $1;
+
 -- name: GetMaxUserIdFromDevelopers :one
 SELECT
     *
