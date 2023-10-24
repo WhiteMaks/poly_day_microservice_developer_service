@@ -4,7 +4,7 @@ go 1.21.0
 
 require (
 	github.com/WhiteMaks/poly_day_bus_schema v0.1.0
-	github.com/WhiteMaks/poly_day_logger v0.0.1
+	github.com/WhiteMaks/poly_day_logger v0.0.2
 	github.com/golang/mock v1.6.0
 	github.com/lib/pq v1.10.9
 )
