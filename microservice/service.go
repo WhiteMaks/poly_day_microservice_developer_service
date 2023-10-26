@@ -129,6 +129,13 @@ func (ms *Microservice) eventUserCreated10Handler(message schema.Message) {
 	}
 
 	if userCreated10.Role != "ROLE_DEVELOPER" {
+		ms.log.Debug(
+			logger.Message{
+				ShortMessage: "An event was received to create a user other than the developer role. The user will not be saved to the database",
+				FullMessage:  string(message.Body),
+			},
+		)
+
 		return
 	}
 
