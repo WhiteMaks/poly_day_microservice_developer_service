@@ -153,8 +153,6 @@ func (ms *Microservice) eventUserCreated10Handler(message schema.Message) {
 		logger.Message{
 			ShortMessage: "the process of processing the event to create a developer has begun is complete",
 			FullMessage:  string(message.Body),
-			UserId:       message.Meta.UserId,
-			WsId:         message.Meta.WsId,
 		},
 	)
 }
