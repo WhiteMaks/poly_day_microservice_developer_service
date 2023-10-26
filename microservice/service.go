@@ -70,6 +70,11 @@ func (ms *Microservice) Start() error {
 		},
 	)
 
+	err = ms.bus.SubscribeOnQueue(schema.PathSubscriptionDeveloperServiceAuthenticateUserCreated10, ms.eventUserCreated10Handler)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -108,6 +113,55 @@ func (ms *Microservice) getDevelopers10(fromUserId int64) (*schema.GetDevelopers
 	}
 
 	return &getDevelopers10Response, nil
+}
+
+func (ms *Microservice) eventUserCreated10Handler(message schema.Message) {
+	userCreated10, err := schema.GetUserCreated10FromMessage(message)
+	if err != nil {
+		ms.log.Error(
+			logger.Message{
+				ShortMessage: "invalid request body for event user created 1.0",
+				FullMessage:  err.Error(),
+			},
+		)
+
+		return
+	}
+
+	if userCreated10.Role != "ROLE_DEVELOPER" {
+		ms.log.Debug(
+			logger.Message{
+				ShortMessage: "An event was received to create a user other than the developer role. The user will not be saved to the database",
+				FullMessage:  string(message.Body),
+			},
+		)
+
+		return
+	}
+
+	ms.log.Info(
+		logger.Message{
+			ShortMessage: "the process of processing the event to create a developer has begun",
+			FullMessage:  string(message.Body),
+		},
+	)
+
+	_, err = ms.store.CreateDeveloper(context.Background(), userCreated10.ID)
+	if err != nil {
+		ms.log.Warn(
+			logger.Message{
+				ShortMessage: fmt.Sprintf("error when saving developer [ %v ] to database", userCreated10.ID),
+				FullMessage:  err.Error(),
+			},
+		)
+	}
+
+	ms.log.Info(
+		logger.Message{
+			ShortMessage: "the process of processing the event to create a developer has begun is complete",
+			FullMessage:  string(message.Body),
+		},
+	)
 }
 
 func (ms *Microservice) rootMessageHandler(message schema.Message) {
