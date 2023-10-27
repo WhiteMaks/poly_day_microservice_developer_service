@@ -180,3 +180,76 @@ func (ms *Microservice) createRelease10(message schema.Message) {
 	schema.FillStatusForMessage(&responseMessage, schema.OK)
 	ms.bus.SendMessage(responseMessage)
 }
+
+func (ms *Microservice) deleteRelease10(message schema.Message) {
+	ms.log.Info(
+		logger.Message{
+			ShortMessage: "the process of deleting a release has begun",
+			FullMessage:  string(message.Body),
+			UserId:       message.Meta.UserId,
+			WsId:         message.Meta.WsId,
+		},
+	)
+
+	responseMessage := schema.GenerateResponseMessage(message)
+
+	_, err := ms.store.GetDeveloperById(context.Background(), message.Meta.UserId)
+	if err != nil {
+		ms.log.Warn(
+			logger.Message{
+				ShortMessage: "the user was denied permission to create a release",
+				FullMessage:  err.Error(),
+				UserId:       message.Meta.UserId,
+				WsId:         message.Meta.WsId,
+			},
+		)
+
+		schema.FillStatusForMessage(&responseMessage, schema.NOT_AUTHORIZED)
+		ms.bus.SendMessage(responseMessage)
+		return
+	}
+
+	requestBody, err := schema.GetDeleteRelease10RequestFromMessage(message)
+	if err != nil {
+		ms.log.Warn(
+			logger.Message{
+				ShortMessage: "invalid request body for delete release",
+				FullMessage:  err.Error(),
+				UserId:       message.Meta.UserId,
+				WsId:         message.Meta.WsId,
+			},
+		)
+
+		schema.FillStatusForMessage(&responseMessage, schema.BAD_REQUEST)
+		ms.bus.SendMessage(responseMessage)
+		return
+	}
+
+	err = ms.store.DeleteReleaseById(context.Background(), requestBody.ID)
+	if err != nil {
+		ms.log.Error(
+			logger.Message{
+				ShortMessage: "error when deleting a release in the database",
+				FullMessage:  err.Error(),
+				UserId:       message.Meta.UserId,
+				WsId:         message.Meta.WsId,
+			},
+		)
+
+		schema.FillStatusForMessage(&responseMessage, schema.INTERNAL_ERROR)
+		ms.bus.SendMessage(responseMessage)
+		return
+	}
+
+	ms.log.Info(
+		logger.Message{
+			ShortMessage: fmt.Sprintf("the release deletion process is complete. Deleted release [ %v ]", requestBody.ID),
+			FullMessage:  string(message.Body),
+			UserId:       message.Meta.UserId,
+			WsId:         message.Meta.WsId,
+		},
+	)
+
+	schema.FillStatusForMessage(&responseMessage, schema.OK)
+	ms.bus.SendMessage(responseMessage)
+}
