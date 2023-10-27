@@ -192,5 +192,10 @@ func (ms *Microservice) rootMessageHandler(message schema.Message) {
 			break
 		}
 
+	case schema.CommandDeleteRelease10:
+		{
+			go ms.deleteRelease10(message)
+			break
+		}
 	}
 }
