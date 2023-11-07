@@ -5,7 +5,7 @@ CREATE TABLE root.entities(
     type                VARCHAR(35)     NOT NULL,
     created_at          timestamptz     NOT NULL        DEFAULT now(),
     updated_at          timestamptz     NOT NULL        DEFAULT now(),
-    parent_entity_id    BIGSERIAL
+    parent_entity_id    BIGSERIAL       NOT NULL
 );
 
 ALTER TABLE root.entities

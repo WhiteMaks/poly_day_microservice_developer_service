@@ -2,7 +2,6 @@ package microservice
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"github.com/WhiteMaks/poly_day_bus_schema/schema"
 	"github.com/WhiteMaks/poly_day_logger/logger"
@@ -54,12 +53,10 @@ func (ms *Microservice) createEntity10(message schema.Message) {
 	}
 
 	createEntityArgs := database.CreateEntityParams{
-		UserID: message.Meta.UserId,
-		Name:   requestBody.Name,
-		Type:   string(requestBody.Type),
-		ParentEntityID: sql.NullInt64{
-			Int64: requestBody.ParentEntityId,
-		},
+		UserID:         message.Meta.UserId,
+		Name:           requestBody.Name,
+		Type:           string(requestBody.Type),
+		ParentEntityID: requestBody.ParentEntityId,
 	}
 
 	dbEntity, err := ms.store.CreateEntity(context.Background(), createEntityArgs)
