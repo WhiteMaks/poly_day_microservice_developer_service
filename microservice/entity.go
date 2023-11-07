@@ -52,10 +52,26 @@ func (ms *Microservice) createEntity10(message schema.Message) {
 		return
 	}
 
+	entityType := requestBody.Type.String()
+	if entityType == nil {
+		ms.log.Warn(
+			logger.Message{
+				ShortMessage: "invalid entity type in body for create entity",
+				FullMessage:  err.Error(),
+				UserId:       message.Meta.UserId,
+				WsId:         message.Meta.WsId,
+			},
+		)
+
+		schema.FillStatusForMessage(&responseMessage, schema.BAD_REQUEST)
+		ms.bus.SendMessage(responseMessage)
+		return
+	}
+
 	createEntityArgs := database.CreateEntityParams{
 		UserID:         message.Meta.UserId,
 		Name:           requestBody.Name,
-		Type:           string(requestBody.Type),
+		Type:           *entityType,
 		ParentEntityID: requestBody.ParentEntityId,
 	}
 
