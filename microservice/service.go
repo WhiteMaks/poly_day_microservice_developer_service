@@ -172,7 +172,7 @@ func (ms *Microservice) rootMessageHandler(message schema.Message) {
 
 	methodName := schema.GenerateFullMethodNameFromMessage(message)
 
-	ms.log.Info(
+	ms.log.Debug(
 		logger.Message{
 			ShortMessage: fmt.Sprintf("received method name [ %v ] for further processing", methodName),
 		},
@@ -195,6 +195,12 @@ func (ms *Microservice) rootMessageHandler(message schema.Message) {
 	case schema.CommandDeleteRelease10:
 		{
 			go ms.deleteRelease10(message)
+			break
+		}
+
+	case schema.CommandCreateEntity10:
+		{
+			go ms.createEntity10(message)
 			break
 		}
 	}
