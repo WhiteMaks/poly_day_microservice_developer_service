@@ -13,6 +13,22 @@ WHERE
 
 -- name: GetEntities :many
 SELECT
-    *
+	*
 FROM
-    root.entities;
+	root.entities;
+
+-- name: GetEntityById :one
+SELECT
+	*
+FROM
+	root.entities
+WHERE
+	id = $1;
+
+-- name: GetEntitiesByParentEntityId :many
+SELECT
+	*
+FROM
+	root.entities
+WHERE
+	parent_entity_id = $1;
