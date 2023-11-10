@@ -203,5 +203,11 @@ func (ms *Microservice) rootMessageHandler(message schema.Message) {
 			go ms.createEntity10(message)
 			break
 		}
+
+	case schema.CommandGetEntities10:
+		{
+			go ms.getEntities10(message)
+			break
+		}
 	}
 }
