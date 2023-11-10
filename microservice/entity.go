@@ -57,15 +57,31 @@ func (ms *Microservice) getEntities10(message schema.Message) {
 	for i, value := range dbEntities {
 		entityBody := schema.GenerateEntityStruct[any](value.ID, value.Name, schema.EntityType(value.Type), nil)
 
-		dbEntitiesChild, err := ms.store.GetEntitiesByParentEntityId(context.Background(), entityBody.ID)
+		dbEntityChildList, err := ms.store.GetEntitiesByParentEntityId(context.Background(), entityBody.ID)
 
 		if err != nil {
-			break
+			ms.log.Error(
+				logger.Message{
+					ShortMessage: fmt.Sprintf("error when searching for entities in the database by parent entity id [ %v ]", entityBody.ID),
+					FullMessage:  err.Error(),
+					UserId:       message.Meta.UserId,
+					WsId:         message.Meta.WsId,
+				},
+			)
+			continue
 		}
 
-		err = ms.generateEntitiesForParent(&entityBody, dbEntitiesChild)
+		err = ms.generateEntitiesForParent(&entityBody, dbEntityChildList)
 		if err != nil {
-			break
+			ms.log.Error(
+				logger.Message{
+					ShortMessage: fmt.Sprintf("error when generating child list for entity id [ %v ]", entityBody.ID),
+					FullMessage:  err.Error(),
+					UserId:       message.Meta.UserId,
+					WsId:         message.Meta.WsId,
+				},
+			)
+			continue
 		}
 
 		entitiesBody[i] = entityBody
