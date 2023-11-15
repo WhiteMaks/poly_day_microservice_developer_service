@@ -209,5 +209,11 @@ func (ms *Microservice) rootMessageHandler(message schema.Message) {
 			go ms.getEntities10(message)
 			break
 		}
+
+	case schema.CommandDeleteEntity10:
+		{
+			go ms.deleteEntity10(message)
+			break
+		}
 	}
 }

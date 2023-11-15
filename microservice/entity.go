@@ -282,3 +282,124 @@ func (ms *Microservice) createEntity10(message schema.Message) {
 	schema.FillStatusForMessage(&responseMessage, schema.OK)
 	ms.bus.SendMessage(responseMessage)
 }
+
+func (ms *Microservice) deleteEntity10(message schema.Message) {
+	ms.log.Info(
+		logger.Message{
+			ShortMessage: "the process of deleting a entity has begun",
+			FullMessage:  string(message.Body),
+			UserId:       message.Meta.UserId,
+			WsId:         message.Meta.WsId,
+		},
+	)
+
+	responseMessage := schema.GenerateResponseMessage(message)
+
+	_, err := ms.store.GetDeveloperById(context.Background(), message.Meta.UserId)
+	if err != nil {
+		ms.log.Warn(
+			logger.Message{
+				ShortMessage: "the user was denied permission to delete an entity",
+				FullMessage:  err.Error(),
+				UserId:       message.Meta.UserId,
+				WsId:         message.Meta.WsId,
+			},
+		)
+
+		schema.FillStatusForMessage(&responseMessage, schema.NOT_AUTHORIZED)
+		ms.bus.SendMessage(responseMessage)
+		return
+	}
+
+	requestBody, err := schema.GetDeleteEntity10RequestFromMessage(message)
+	if err != nil {
+		ms.log.Warn(
+			logger.Message{
+				ShortMessage: "invalid request body for delete entity",
+				FullMessage:  err.Error(),
+				UserId:       message.Meta.UserId,
+				WsId:         message.Meta.WsId,
+			},
+		)
+
+		schema.FillStatusForMessage(&responseMessage, schema.BAD_REQUEST)
+		ms.bus.SendMessage(responseMessage)
+		return
+	}
+
+	err = ms.cleanChildEntitiesByParentId(requestBody.ID)
+	if err != nil {
+		ms.log.Error(
+			logger.Message{
+				ShortMessage: "error when cleaning child entities in the database",
+				FullMessage:  err.Error(),
+				UserId:       message.Meta.UserId,
+				WsId:         message.Meta.WsId,
+			},
+		)
+
+		schema.FillStatusForMessage(&responseMessage, schema.INTERNAL_ERROR)
+		ms.bus.SendMessage(responseMessage)
+		return
+	}
+
+	err = ms.store.DeleteEntityById(context.Background(), requestBody.ID)
+	if err != nil {
+		ms.log.Error(
+			logger.Message{
+				ShortMessage: "error when deleting an entity in the database",
+				FullMessage:  err.Error(),
+				UserId:       message.Meta.UserId,
+				WsId:         message.Meta.WsId,
+			},
+		)
+
+		schema.FillStatusForMessage(&responseMessage, schema.INTERNAL_ERROR)
+		ms.bus.SendMessage(responseMessage)
+		return
+	}
+
+	ms.log.Info(
+		logger.Message{
+			ShortMessage: fmt.Sprintf("the entity deletion process is complete. Deleted entity [ %v ]", requestBody.ID),
+			FullMessage:  string(message.Body),
+			UserId:       message.Meta.UserId,
+			WsId:         message.Meta.WsId,
+		},
+	)
+
+	schema.FillStatusForMessage(&responseMessage, schema.OK)
+	ms.bus.SendMessage(responseMessage)
+}
+
+func (ms *Microservice) cleanChildEntitiesByParentId(parentId int64) error {
+	childEntities, err := ms.store.GetEntitiesByParentEntityId(context.Background(), parentId)
+	if err != nil {
+		ms.log.Error(
+			logger.Message{
+				ShortMessage: fmt.Sprintf("error when searching for entities in the database by parent entity id [ %v ]", parentId),
+				FullMessage:  err.Error(),
+			},
+		)
+
+		return err
+	}
+
+	for _, value := range childEntities {
+		err = ms.store.DeleteEntityById(context.Background(), value.ID)
+		if err != nil {
+			ms.log.Error(
+				logger.Message{
+					ShortMessage: fmt.Sprintf("error when deleting entity in the database by id [ %v ]", value.ID),
+					FullMessage:  err.Error(),
+				},
+			)
+
+			return err
+		}
+
+		err = ms.cleanChildEntitiesByParentId(value.ID)
+	}
+
+	return err
+}
