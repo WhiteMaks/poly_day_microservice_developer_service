@@ -6,6 +6,10 @@ github.com/WhiteMaks/poly_day_bus_schema v0.1.4 h1:bG1cxRtFZ24v09ANuKTQ63LSjHDMl
 github.com/WhiteMaks/poly_day_bus_schema v0.1.4/go.mod h1:zTKcsOMRt5Gd78NZXPn12JM2aTP0/w2KDzOghdhOUag=
 github.com/WhiteMaks/poly_day_bus_schema v0.1.5 h1:JPeR0e7umu1Sd1Xh+dqEAXF/dIur7wCC/PYRCPbU/ZY=
 github.com/WhiteMaks/poly_day_bus_schema v0.1.5/go.mod h1:zTKcsOMRt5Gd78NZXPn12JM2aTP0/w2KDzOghdhOUag=
+github.com/WhiteMaks/poly_day_bus_schema v0.1.6 h1:chQI26pyyuLlJsH6oSN8KjK4qx+Qqj6dKIjxAYMSfxg=
+github.com/WhiteMaks/poly_day_bus_schema v0.1.6/go.mod h1:zTKcsOMRt5Gd78NZXPn12JM2aTP0/w2KDzOghdhOUag=
+github.com/WhiteMaks/poly_day_bus_schema v0.1.7 h1:/YooeEEyTADB1Q4vxip4W7fqe6yJu4yUaZ/gwRFn0j0=
+github.com/WhiteMaks/poly_day_bus_schema v0.1.7/go.mod h1:zTKcsOMRt5Gd78NZXPn12JM2aTP0/w2KDzOghdhOUag=
 github.com/WhiteMaks/poly_day_logger v0.0.2 h1:Kze9C6Tl4mY70IIBmtwAKNSFx170RAE6zmoQf3E75Wk=
 github.com/WhiteMaks/poly_day_logger v0.0.2/go.mod h1:8Uz5ByFcbyvAQYD841e4rlZzXB068N/b3FCBPCnhQWk=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
