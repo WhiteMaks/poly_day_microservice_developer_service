@@ -215,5 +215,11 @@ func (ms *Microservice) rootMessageHandler(message schema.Message) {
 			go ms.deleteEntity10(message)
 			break
 		}
+
+	case schema.CommandSaveModelSource10:
+		{
+			go ms.saveModelSource10(message)
+			break
+		}
 	}
 }
