@@ -238,7 +238,23 @@ func (ms *Microservice) createEntity10(message schema.Message) {
 		ParentEntityID: requestBody.ParentEntityId,
 	}
 
-	dbEntity, err := ms.store.CreateEntity(context.Background(), createEntityArgs)
+	var dbEntity database.RootEntity
+
+	switch requestBody.Type {
+
+	case schema.MODEL:
+		{
+			dbEntity, err = ms.store.CreateModelEntity(context.Background(), createEntityArgs)
+			break
+		}
+
+	default:
+		{
+			dbEntity, err = ms.store.CreateEntity(context.Background(), createEntityArgs)
+			break
+		}
+	}
+
 	if err != nil {
 		ms.log.Error(
 			logger.Message{
@@ -327,7 +343,22 @@ func (ms *Microservice) deleteEntity10(message schema.Message) {
 		return
 	}
 
-	err = ms.cleanChildEntitiesByParentId(requestBody.ID)
+	dbEntity, err := ms.store.GetEntityById(context.Background(), requestBody.ID)
+	if err != nil {
+		ms.log.Warn(
+			logger.Message{
+				ShortMessage: "error when searching entity in the database",
+				FullMessage:  err.Error(),
+				UserId:       message.Meta.UserId,
+				WsId:         message.Meta.WsId,
+			},
+		)
+
+		schema.FillStatusForMessage(&responseMessage, schema.NOT_FOUND)
+		ms.bus.SendMessage(responseMessage)
+	}
+
+	err = ms.cleanChildEntitiesByParentId(dbEntity.ID)
 	if err != nil {
 		ms.log.Error(
 			logger.Message{
@@ -343,7 +374,23 @@ func (ms *Microservice) deleteEntity10(message schema.Message) {
 		return
 	}
 
-	err = ms.store.DeleteEntityById(context.Background(), requestBody.ID)
+	switch schema.EntityType(dbEntity.Type) {
+
+	case schema.MODEL:
+		{
+			err = ms.store.DeleteModelEntity(context.Background(), dbEntity.ID)
+			break
+		}
+
+	default:
+		{
+			err = ms.store.DeleteEntityById(context.Background(), dbEntity.ID)
+			break
+		}
+
+	}
+
+	err = ms.store.DeleteEntityById(context.Background(), dbEntity.ID)
 	if err != nil {
 		ms.log.Error(
 			logger.Message{
@@ -386,7 +433,23 @@ func (ms *Microservice) cleanChildEntitiesByParentId(parentId int64) error {
 	}
 
 	for _, value := range childEntities {
-		err = ms.store.DeleteEntityById(context.Background(), value.ID)
+
+		switch schema.EntityType(value.Type) {
+
+		case schema.MODEL:
+			{
+				err = ms.store.DeleteModelEntity(context.Background(), value.ID)
+				break
+			}
+
+		default:
+			{
+				err = ms.store.DeleteEntityById(context.Background(), value.ID)
+				break
+			}
+
+		}
+
 		if err != nil {
 			ms.log.Error(
 				logger.Message{
