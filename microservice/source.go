@@ -53,6 +53,36 @@ func (ms *Microservice) saveModelSource10(message schema.Message) {
 		return
 	}
 
+	dbEntity, err := ms.store.GetEntityById(context.Background(), requestBody.EntityId)
+	if err != nil {
+		ms.log.Warn(
+			logger.Message{
+				ShortMessage: "error when searching entity in the database",
+				FullMessage:  err.Error(),
+				UserId:       message.Meta.UserId,
+				WsId:         message.Meta.WsId,
+			},
+		)
+
+		schema.FillStatusForMessage(&responseMessage, schema.NOT_FOUND)
+		ms.bus.SendMessage(responseMessage)
+		return
+	}
+
+	if schema.EntityType(dbEntity.Type) != schema.MODEL {
+		ms.log.Warn(
+			logger.Message{
+				ShortMessage: fmt.Sprintf("entity by id [ %v ] is not a model", dbEntity.ID),
+				UserId:       message.Meta.UserId,
+				WsId:         message.Meta.WsId,
+			},
+		)
+
+		schema.FillStatusForMessage(&responseMessage, schema.BAD_REQUEST)
+		ms.bus.SendMessage(responseMessage)
+		return
+	}
+
 	var sourceBase64 sql.NullString
 
 	if len(requestBody.SourceBase64) > 0 {

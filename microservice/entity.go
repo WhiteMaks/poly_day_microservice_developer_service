@@ -343,6 +343,22 @@ func (ms *Microservice) deleteEntity10(message schema.Message) {
 		return
 	}
 
+	err = ms.cleanChildEntitiesByParentId(requestBody.ID)
+	if err != nil {
+		ms.log.Error(
+			logger.Message{
+				ShortMessage: "error when cleaning child entities in the database",
+				FullMessage:  err.Error(),
+				UserId:       message.Meta.UserId,
+				WsId:         message.Meta.WsId,
+			},
+		)
+
+		schema.FillStatusForMessage(&responseMessage, schema.INTERNAL_ERROR)
+		ms.bus.SendMessage(responseMessage)
+		return
+	}
+
 	dbEntity, err := ms.store.GetEntityById(context.Background(), requestBody.ID)
 	if err != nil {
 		ms.log.Warn(
@@ -355,21 +371,6 @@ func (ms *Microservice) deleteEntity10(message schema.Message) {
 		)
 
 		schema.FillStatusForMessage(&responseMessage, schema.NOT_FOUND)
-		ms.bus.SendMessage(responseMessage)
-	}
-
-	err = ms.cleanChildEntitiesByParentId(dbEntity.ID)
-	if err != nil {
-		ms.log.Error(
-			logger.Message{
-				ShortMessage: "error when cleaning child entities in the database",
-				FullMessage:  err.Error(),
-				UserId:       message.Meta.UserId,
-				WsId:         message.Meta.WsId,
-			},
-		)
-
-		schema.FillStatusForMessage(&responseMessage, schema.INTERNAL_ERROR)
 		ms.bus.SendMessage(responseMessage)
 		return
 	}
