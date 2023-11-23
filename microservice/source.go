@@ -9,6 +9,95 @@ import (
 	"poly_day_microservice_developer_service/autogenerate/database"
 )
 
+func (ms *Microservice) getModelSource10(message schema.Message) {
+	ms.log.Info(
+		logger.Message{
+			ShortMessage: "the process of receiving model source has begun",
+			FullMessage:  string(message.Body),
+			UserId:       message.Meta.UserId,
+			WsId:         message.Meta.WsId,
+		},
+	)
+
+	responseMessage := schema.GenerateResponseMessage(message)
+
+	_, err := ms.store.GetDeveloperById(context.Background(), message.Meta.UserId)
+	if err != nil {
+		ms.log.Warn(
+			logger.Message{
+				ShortMessage: "the user was denied permission to receive model source",
+				FullMessage:  err.Error(),
+				UserId:       message.Meta.UserId,
+				WsId:         message.Meta.WsId,
+			},
+		)
+
+		schema.FillStatusForMessage(&responseMessage, schema.NOT_AUTHORIZED)
+		ms.bus.SendMessage(responseMessage)
+		return
+	}
+
+	requestBody, err := schema.GetGetModelSource10RequestFromMessage(message)
+	if err != nil {
+		ms.log.Warn(
+			logger.Message{
+				ShortMessage: "invalid request body for get model source",
+				FullMessage:  err.Error(),
+				UserId:       message.Meta.UserId,
+				WsId:         message.Meta.WsId,
+			},
+		)
+
+		schema.FillStatusForMessage(&responseMessage, schema.BAD_REQUEST)
+		ms.bus.SendMessage(responseMessage)
+		return
+	}
+
+	dbModelSource, err := ms.store.GetModelSourceByEntityId(context.Background(), requestBody.EntityId)
+	if err != nil {
+		ms.log.Error(
+			logger.Message{
+				ShortMessage: "error when searching for model source in the database",
+				FullMessage:  err.Error(),
+				UserId:       message.Meta.UserId,
+				WsId:         message.Meta.WsId,
+			},
+		)
+
+		schema.FillStatusForMessage(&responseMessage, schema.INTERNAL_ERROR)
+		ms.bus.SendMessage(responseMessage)
+		return
+	}
+
+	err = schema.FillBodyGetModelSource10ResponseForMessage(dbModelSource.ID, dbModelSource.SourceBase64.String, &responseMessage)
+	if err != nil {
+		ms.log.Error(
+			logger.Message{
+				ShortMessage: "error when filling out the body of the response to a request for model source",
+				FullMessage:  err.Error(),
+				UserId:       message.Meta.UserId,
+				WsId:         message.Meta.WsId,
+			},
+		)
+
+		schema.FillStatusForMessage(&responseMessage, schema.INTERNAL_ERROR)
+		ms.bus.SendMessage(responseMessage)
+		return
+	}
+
+	ms.log.Info(
+		logger.Message{
+			ShortMessage: fmt.Sprintf("the model source receive process is complete. Sent model source [ %v ]", dbModelSource.ID),
+			FullMessage:  string(message.Body),
+			UserId:       message.Meta.UserId,
+			WsId:         message.Meta.WsId,
+		},
+	)
+
+	schema.FillStatusForMessage(&responseMessage, schema.OK)
+	ms.bus.SendMessage(responseMessage)
+}
+
 func (ms *Microservice) saveModelSource10(message schema.Message) {
 	ms.log.Info(
 		logger.Message{
