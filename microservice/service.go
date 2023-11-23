@@ -221,5 +221,11 @@ func (ms *Microservice) rootMessageHandler(message schema.Message) {
 			go ms.saveModelSource10(message)
 			break
 		}
+
+	case schema.CommandGetModelSource10:
+		{
+			go ms.getModelSource10(message)
+			break
+		}
 	}
 }
