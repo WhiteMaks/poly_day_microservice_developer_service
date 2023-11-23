@@ -19,3 +19,11 @@ SET
 	updated_at = now()
 WHERE
 	entity_id = $1;
+
+-- name: GetModelSourceByEntityId :one
+SELECT
+	*
+FROM
+	root.model_sources
+WHERE
+	entity_id = $1;
