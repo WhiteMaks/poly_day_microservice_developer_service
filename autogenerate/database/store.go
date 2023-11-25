@@ -8,7 +8,9 @@ import (
 type Store interface {
 	Querier
 	CreateModelEntity(ctx context.Context, createEntityArgs CreateEntityParams) (RootEntity, error)
+	CreateShaderEntity(ctx context.Context, createEntityArgs CreateEntityParams) (RootEntity, error)
 	DeleteModelEntity(ctx context.Context, entityId int64) error
+	DeleteShaderEntity(ctx context.Context, entityId int64) error
 }
 
 type SQLStore struct {

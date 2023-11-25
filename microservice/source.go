@@ -213,3 +213,135 @@ func (ms *Microservice) saveModelSource10(message schema.Message) {
 	schema.FillStatusForMessage(&responseMessage, schema.OK)
 	ms.bus.SendMessage(responseMessage)
 }
+
+func (ms *Microservice) saveShaderSource10(message schema.Message) {
+	ms.log.Info(
+		logger.Message{
+			ShortMessage: "the process of saving shader source has begun",
+			UserId:       message.Meta.UserId,
+			WsId:         message.Meta.WsId,
+		},
+	)
+
+	responseMessage := schema.GenerateResponseMessage(message)
+
+	_, err := ms.store.GetDeveloperById(context.Background(), message.Meta.UserId)
+	if err != nil {
+		ms.log.Warn(
+			logger.Message{
+				ShortMessage: "the user was denied permission to saving shader source",
+				FullMessage:  err.Error(),
+				UserId:       message.Meta.UserId,
+				WsId:         message.Meta.WsId,
+			},
+		)
+
+		schema.FillStatusForMessage(&responseMessage, schema.NOT_AUTHORIZED)
+		ms.bus.SendMessage(responseMessage)
+		return
+	}
+
+	requestBody, err := schema.GetSaveShaderSource10RequestFromMessage(message)
+	if err != nil {
+		ms.log.Warn(
+			logger.Message{
+				ShortMessage: "invalid request body for save shader source",
+				FullMessage:  err.Error(),
+				UserId:       message.Meta.UserId,
+				WsId:         message.Meta.WsId,
+			},
+		)
+
+		schema.FillStatusForMessage(&responseMessage, schema.BAD_REQUEST)
+		ms.bus.SendMessage(responseMessage)
+		return
+	}
+
+	dbEntity, err := ms.store.GetEntityById(context.Background(), requestBody.EntityId)
+	if err != nil {
+		ms.log.Warn(
+			logger.Message{
+				ShortMessage: "error when searching entity in the database",
+				FullMessage:  err.Error(),
+				UserId:       message.Meta.UserId,
+				WsId:         message.Meta.WsId,
+			},
+		)
+
+		schema.FillStatusForMessage(&responseMessage, schema.NOT_FOUND)
+		ms.bus.SendMessage(responseMessage)
+		return
+	}
+
+	if schema.EntityType(dbEntity.Type) != schema.SHADER {
+		ms.log.Warn(
+			logger.Message{
+				ShortMessage: fmt.Sprintf("entity by id [ %v ] is not a shader", dbEntity.ID),
+				UserId:       message.Meta.UserId,
+				WsId:         message.Meta.WsId,
+			},
+		)
+
+		schema.FillStatusForMessage(&responseMessage, schema.BAD_REQUEST)
+		ms.bus.SendMessage(responseMessage)
+		return
+	}
+
+	var vertexShader sql.NullString
+	var geometryShader sql.NullString
+	var fragmentShader sql.NullString
+
+	if len(requestBody.VertexShader) > 0 {
+		vertexShader = sql.NullString{
+			String: requestBody.VertexShader,
+			Valid:  true,
+		}
+	} else {
+		vertexShader = sql.NullString{}
+	}
+
+	geometryShader = sql.NullString{}
+
+	if len(requestBody.FragmentShader) > 0 {
+		fragmentShader = sql.NullString{
+			String: requestBody.VertexShader,
+			Valid:  true,
+		}
+	} else {
+		fragmentShader = sql.NullString{}
+	}
+
+	updateShaderSourceByEntityIdArgs := database.UpdateShaderSourceByEntityIdParams{
+		EntityID:       requestBody.EntityId,
+		VertexShader:   vertexShader,
+		GeometryShader: geometryShader,
+		FragmentShader: fragmentShader,
+	}
+
+	err = ms.store.UpdateShaderSourceByEntityId(context.Background(), updateShaderSourceByEntityIdArgs)
+	if err != nil {
+		ms.log.Error(
+			logger.Message{
+				ShortMessage: "error when updating a shader source in the database",
+				FullMessage:  err.Error(),
+				UserId:       message.Meta.UserId,
+				WsId:         message.Meta.WsId,
+			},
+		)
+
+		schema.FillStatusForMessage(&responseMessage, schema.INTERNAL_ERROR)
+		ms.bus.SendMessage(responseMessage)
+		return
+	}
+
+	ms.log.Info(
+		logger.Message{
+			ShortMessage: fmt.Sprintf("the shader source saving process is complete. Updated shader source by entity id [ %v ]", requestBody.EntityId),
+			UserId:       message.Meta.UserId,
+			WsId:         message.Meta.WsId,
+		},
+	)
+
+	schema.FillStatusForMessage(&responseMessage, schema.OK)
+	ms.bus.SendMessage(responseMessage)
+}
