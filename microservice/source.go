@@ -88,7 +88,6 @@ func (ms *Microservice) getModelSource10(message schema.Message) {
 	ms.log.Info(
 		logger.Message{
 			ShortMessage: fmt.Sprintf("the model source receive process is complete. Sent model source [ %v ]", dbModelSource.ID),
-			FullMessage:  string(message.Body),
 			UserId:       message.Meta.UserId,
 			WsId:         message.Meta.WsId,
 		},
@@ -102,7 +101,6 @@ func (ms *Microservice) saveModelSource10(message schema.Message) {
 	ms.log.Info(
 		logger.Message{
 			ShortMessage: "the process of saving model source has begun",
-			FullMessage:  string(message.Body),
 			UserId:       message.Meta.UserId,
 			WsId:         message.Meta.WsId,
 		},
@@ -207,7 +205,6 @@ func (ms *Microservice) saveModelSource10(message schema.Message) {
 	ms.log.Info(
 		logger.Message{
 			ShortMessage: fmt.Sprintf("the model source saving process is complete. Updated model source by entity id [ %v ]", requestBody.EntityId),
-			FullMessage:  string(message.Body),
 			UserId:       message.Meta.UserId,
 			WsId:         message.Meta.WsId,
 		},

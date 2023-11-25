@@ -77,7 +77,6 @@ func (ms *Microservice) getReleases10(message schema.Message) {
 	ms.log.Info(
 		logger.Message{
 			ShortMessage: fmt.Sprintf("the release receive process is complete. Sent releases [ %v ]", len(dbReleases)),
-			FullMessage:  string(message.Body),
 			UserId:       message.Meta.UserId,
 			WsId:         message.Meta.WsId,
 		},
@@ -171,7 +170,6 @@ func (ms *Microservice) createRelease10(message schema.Message) {
 	ms.log.Info(
 		logger.Message{
 			ShortMessage: fmt.Sprintf("the release creation process is complete. Added release [ %v ]", dbRelease.ID),
-			FullMessage:  string(message.Body),
 			UserId:       message.Meta.UserId,
 			WsId:         message.Meta.WsId,
 		},
@@ -244,7 +242,6 @@ func (ms *Microservice) deleteRelease10(message schema.Message) {
 	ms.log.Info(
 		logger.Message{
 			ShortMessage: fmt.Sprintf("the release deletion process is complete. Deleted release [ %v ]", requestBody.ID),
-			FullMessage:  string(message.Body),
 			UserId:       message.Meta.UserId,
 			WsId:         message.Meta.WsId,
 		},

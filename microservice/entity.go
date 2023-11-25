@@ -289,7 +289,6 @@ func (ms *Microservice) createEntity10(message schema.Message) {
 	ms.log.Info(
 		logger.Message{
 			ShortMessage: fmt.Sprintf("the entity creation process is complete. Added entity [ %v ]", dbEntity.ID),
-			FullMessage:  string(message.Body),
 			UserId:       message.Meta.UserId,
 			WsId:         message.Meta.WsId,
 		},
@@ -410,7 +409,6 @@ func (ms *Microservice) deleteEntity10(message schema.Message) {
 	ms.log.Info(
 		logger.Message{
 			ShortMessage: fmt.Sprintf("the entity deletion process is complete. Deleted entity [ %v ]", requestBody.ID),
-			FullMessage:  string(message.Body),
 			UserId:       message.Meta.UserId,
 			WsId:         message.Meta.WsId,
 		},
