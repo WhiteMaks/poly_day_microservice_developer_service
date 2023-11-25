@@ -248,6 +248,12 @@ func (ms *Microservice) createEntity10(message schema.Message) {
 			break
 		}
 
+	case schema.SHADER:
+		{
+			dbEntity, err = ms.store.CreateShaderEntity(context.Background(), createEntityArgs)
+			break
+		}
+
 	default:
 		{
 			dbEntity, err = ms.store.CreateEntity(context.Background(), createEntityArgs)
@@ -382,6 +388,12 @@ func (ms *Microservice) deleteEntity10(message schema.Message) {
 			break
 		}
 
+	case schema.SHADER:
+		{
+			err = ms.store.DeleteShaderEntity(context.Background(), dbEntity.ID)
+			break
+		}
+
 	default:
 		{
 			err = ms.store.DeleteEntityById(context.Background(), dbEntity.ID)
@@ -438,6 +450,12 @@ func (ms *Microservice) cleanChildEntitiesByParentId(parentId int64) error {
 		case schema.MODEL:
 			{
 				err = ms.store.DeleteModelEntity(context.Background(), value.ID)
+				break
+			}
+
+		case schema.SHADER:
+			{
+				err = ms.store.DeleteShaderEntity(context.Background(), value.ID)
 				break
 			}
 
