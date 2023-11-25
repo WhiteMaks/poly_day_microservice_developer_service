@@ -233,5 +233,11 @@ func (ms *Microservice) rootMessageHandler(message schema.Message) {
 			go ms.saveShaderSource10(message)
 			break
 		}
+
+	case schema.CommandGetShaderSource10:
+		{
+			go ms.getShaderSource10(message)
+			break
+		}
 	}
 }
