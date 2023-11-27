@@ -182,7 +182,7 @@ func (ms *Microservice) rootMessageHandler(message schema.Message) {
 
 	case schema.CommandCreateRelease10:
 		{
-			go ms.createRelease10(message)
+			go ms.bus.SendMessage(ms.createRelease10(message))
 			break
 		}
 
