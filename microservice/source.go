@@ -392,7 +392,7 @@ func (ms *Microservice) saveShaderSource10(message schema.Message) {
 
 	if len(requestBody.FragmentShader) > 0 {
 		fragmentShader = sql.NullString{
-			String: requestBody.VertexShader,
+			String: requestBody.FragmentShader,
 			Valid:  true,
 		}
 	} else {
