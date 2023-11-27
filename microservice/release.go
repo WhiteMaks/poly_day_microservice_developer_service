@@ -8,7 +8,7 @@ import (
 	"poly_day_microservice_developer_service/autogenerate/database"
 )
 
-func (ms *Microservice) getReleases10(message schema.Message) {
+func (ms *Microservice) getReleases10(message schema.Message) schema.Message {
 	ms.log.Info(
 		logger.Message{
 			ShortMessage: "the process of receiving releases has begun",
@@ -20,20 +20,9 @@ func (ms *Microservice) getReleases10(message schema.Message) {
 
 	responseMessage := schema.GenerateResponseMessage(message)
 
-	_, err := ms.store.GetDeveloperById(context.Background(), message.Meta.UserId)
+	err := ms.checkUser("the user was denied permission to receive releases", message.Meta, &responseMessage)
 	if err != nil {
-		ms.log.Warn(
-			logger.Message{
-				ShortMessage: "the user was denied permission to receive releases",
-				FullMessage:  err.Error(),
-				UserId:       message.Meta.UserId,
-				WsId:         message.Meta.WsId,
-			},
-		)
-
-		schema.FillStatusForMessage(&responseMessage, schema.NOT_AUTHORIZED)
-		ms.bus.SendMessage(responseMessage)
-		return
+		return responseMessage
 	}
 
 	dbReleases, err := ms.store.GetReleases(context.Background())
@@ -48,8 +37,8 @@ func (ms *Microservice) getReleases10(message schema.Message) {
 		)
 
 		schema.FillStatusForMessage(&responseMessage, schema.INTERNAL_ERROR)
-		ms.bus.SendMessage(responseMessage)
-		return
+
+		return responseMessage
 	}
 
 	releasesBody := make([]schema.Release, len(dbReleases))
@@ -70,8 +59,8 @@ func (ms *Microservice) getReleases10(message schema.Message) {
 		)
 
 		schema.FillStatusForMessage(&responseMessage, schema.INTERNAL_ERROR)
-		ms.bus.SendMessage(responseMessage)
-		return
+
+		return responseMessage
 	}
 
 	ms.log.Info(
@@ -83,7 +72,8 @@ func (ms *Microservice) getReleases10(message schema.Message) {
 	)
 
 	schema.FillStatusForMessage(&responseMessage, schema.OK)
-	ms.bus.SendMessage(responseMessage)
+
+	return responseMessage
 }
 
 func (ms *Microservice) createRelease10(message schema.Message) {
@@ -249,4 +239,24 @@ func (ms *Microservice) deleteRelease10(message schema.Message) {
 
 	schema.FillStatusForMessage(&responseMessage, schema.OK)
 	ms.bus.SendMessage(responseMessage)
+}
+
+func (ms *Microservice) checkUser(errorMessage string, meta schema.Meta, responseMessage *schema.Message) error {
+	_, err := ms.store.GetDeveloperById(context.Background(), meta.UserId)
+	if err != nil {
+		ms.log.Warn(
+			logger.Message{
+				ShortMessage: errorMessage,
+				FullMessage:  err.Error(),
+				UserId:       meta.UserId,
+				WsId:         meta.WsId,
+			},
+		)
+
+		schema.FillStatusForMessage(responseMessage, schema.NOT_AUTHORIZED)
+
+		return err
+	}
+
+	return nil
 }

@@ -188,7 +188,7 @@ func (ms *Microservice) rootMessageHandler(message schema.Message) {
 
 	case schema.CommandGetReleases10:
 		{
-			go ms.getReleases10(message)
+			go ms.bus.SendMessage(ms.getReleases10(message))
 			break
 		}
 
