@@ -159,7 +159,7 @@ func (ms *Microservice) createRelease10(message schema.Message) schema.Message {
 	return responseMessage
 }
 
-func (ms *Microservice) deleteRelease10(message schema.Message) {
+func (ms *Microservice) deleteRelease10(message schema.Message) schema.Message {
 	ms.log.Info(
 		logger.Message{
 			ShortMessage: "the process of deleting a release has begun",
@@ -171,20 +171,9 @@ func (ms *Microservice) deleteRelease10(message schema.Message) {
 
 	responseMessage := schema.GenerateResponseMessage(message)
 
-	_, err := ms.store.GetDeveloperById(context.Background(), message.Meta.UserId)
+	err := ms.checkUser("the user was denied permission to delete a release", message.Meta, &responseMessage)
 	if err != nil {
-		ms.log.Warn(
-			logger.Message{
-				ShortMessage: "the user was denied permission to create a release",
-				FullMessage:  err.Error(),
-				UserId:       message.Meta.UserId,
-				WsId:         message.Meta.WsId,
-			},
-		)
-
-		schema.FillStatusForMessage(&responseMessage, schema.NOT_AUTHORIZED)
-		ms.bus.SendMessage(responseMessage)
-		return
+		return responseMessage
 	}
 
 	requestBody, err := schema.GetDeleteRelease10RequestFromMessage(message)
@@ -199,8 +188,8 @@ func (ms *Microservice) deleteRelease10(message schema.Message) {
 		)
 
 		schema.FillStatusForMessage(&responseMessage, schema.BAD_REQUEST)
-		ms.bus.SendMessage(responseMessage)
-		return
+
+		return responseMessage
 	}
 
 	err = ms.store.DeleteReleaseById(context.Background(), requestBody.ID)
@@ -215,8 +204,8 @@ func (ms *Microservice) deleteRelease10(message schema.Message) {
 		)
 
 		schema.FillStatusForMessage(&responseMessage, schema.INTERNAL_ERROR)
-		ms.bus.SendMessage(responseMessage)
-		return
+
+		return responseMessage
 	}
 
 	ms.log.Info(
@@ -228,25 +217,6 @@ func (ms *Microservice) deleteRelease10(message schema.Message) {
 	)
 
 	schema.FillStatusForMessage(&responseMessage, schema.OK)
-	ms.bus.SendMessage(responseMessage)
-}
 
-func (ms *Microservice) checkUser(errorMessage string, meta schema.Meta, responseMessage *schema.Message) error {
-	_, err := ms.store.GetDeveloperById(context.Background(), meta.UserId)
-	if err != nil {
-		ms.log.Warn(
-			logger.Message{
-				ShortMessage: errorMessage,
-				FullMessage:  err.Error(),
-				UserId:       meta.UserId,
-				WsId:         meta.WsId,
-			},
-		)
-
-		schema.FillStatusForMessage(responseMessage, schema.NOT_AUTHORIZED)
-
-		return err
-	}
-
-	return nil
+	return responseMessage
 }

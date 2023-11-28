@@ -194,7 +194,7 @@ func (ms *Microservice) rootMessageHandler(message schema.Message) {
 
 	case schema.CommandDeleteRelease10:
 		{
-			go ms.deleteRelease10(message)
+			go ms.bus.SendMessage(ms.deleteRelease10(message))
 			break
 		}
 
@@ -240,4 +240,24 @@ func (ms *Microservice) rootMessageHandler(message schema.Message) {
 			break
 		}
 	}
+}
+
+func (ms *Microservice) checkUser(errorMessage string, meta schema.Meta, responseMessage *schema.Message) error {
+	_, err := ms.store.GetDeveloperById(context.Background(), meta.UserId)
+	if err != nil {
+		ms.log.Warn(
+			logger.Message{
+				ShortMessage: errorMessage,
+				FullMessage:  err.Error(),
+				UserId:       meta.UserId,
+				WsId:         meta.WsId,
+			},
+		)
+
+		schema.FillStatusForMessage(responseMessage, schema.NOT_AUTHORIZED)
+
+		return err
+	}
+
+	return nil
 }
