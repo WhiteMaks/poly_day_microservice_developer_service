@@ -200,7 +200,7 @@ func (ms *Microservice) rootMessageHandler(message schema.Message) {
 
 	case schema.CommandCreateEntity10:
 		{
-			go ms.createEntity10(message)
+			go ms.bus.SendMessage(ms.createEntity10(message))
 			break
 		}
 

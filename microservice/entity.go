@@ -130,7 +130,7 @@ func (ms *Microservice) generateEntitiesForParent(parentEntity *schema.Entity[an
 	return nil
 }
 
-func (ms *Microservice) createEntity10(message schema.Message) {
+func (ms *Microservice) createEntity10(message schema.Message) schema.Message {
 	ms.log.Info(
 		logger.Message{
 			ShortMessage: "the process of creating a entity has begun",
@@ -142,20 +142,9 @@ func (ms *Microservice) createEntity10(message schema.Message) {
 
 	responseMessage := schema.GenerateResponseMessage(message)
 
-	_, err := ms.store.GetDeveloperById(context.Background(), message.Meta.UserId)
+	err := ms.checkUser("the user was denied permission to create an entity", message.Meta, &responseMessage)
 	if err != nil {
-		ms.log.Warn(
-			logger.Message{
-				ShortMessage: "the user was denied permission to create an entity",
-				FullMessage:  err.Error(),
-				UserId:       message.Meta.UserId,
-				WsId:         message.Meta.WsId,
-			},
-		)
-
-		schema.FillStatusForMessage(&responseMessage, schema.NOT_AUTHORIZED)
-		ms.bus.SendMessage(responseMessage)
-		return
+		return responseMessage
 	}
 
 	requestBody, err := schema.GetCreateEntity10RequestFromMessage(message)
@@ -170,8 +159,8 @@ func (ms *Microservice) createEntity10(message schema.Message) {
 		)
 
 		schema.FillStatusForMessage(&responseMessage, schema.BAD_REQUEST)
-		ms.bus.SendMessage(responseMessage)
-		return
+
+		return responseMessage
 	}
 
 	entityType := requestBody.Type.String()
@@ -185,8 +174,8 @@ func (ms *Microservice) createEntity10(message schema.Message) {
 		)
 
 		schema.FillStatusForMessage(&responseMessage, schema.BAD_REQUEST)
-		ms.bus.SendMessage(responseMessage)
-		return
+
+		return responseMessage
 	}
 
 	if requestBody.ParentEntityId > 0 {
@@ -202,8 +191,8 @@ func (ms *Microservice) createEntity10(message schema.Message) {
 			)
 
 			schema.FillStatusForMessage(&responseMessage, schema.NOT_FOUND)
-			ms.bus.SendMessage(responseMessage)
-			return
+
+			return responseMessage
 		}
 
 		if schema.EntityType(dbParentEntity.Type) != schema.FOLDER {
@@ -216,8 +205,8 @@ func (ms *Microservice) createEntity10(message schema.Message) {
 			)
 
 			schema.FillStatusForMessage(&responseMessage, schema.BAD_REQUEST)
-			ms.bus.SendMessage(responseMessage)
-			return
+
+			return responseMessage
 		}
 	}
 
@@ -262,8 +251,8 @@ func (ms *Microservice) createEntity10(message schema.Message) {
 		)
 
 		schema.FillStatusForMessage(&responseMessage, schema.INTERNAL_ERROR)
-		ms.bus.SendMessage(responseMessage)
-		return
+
+		return responseMessage
 	}
 
 	err = schema.FillBodyCreateEntity10ResponseForMessage(dbEntity.ID, &responseMessage)
@@ -278,8 +267,8 @@ func (ms *Microservice) createEntity10(message schema.Message) {
 		)
 
 		schema.FillStatusForMessage(&responseMessage, schema.INTERNAL_ERROR)
-		ms.bus.SendMessage(responseMessage)
-		return
+
+		return responseMessage
 	}
 
 	ms.log.Info(
@@ -291,7 +280,8 @@ func (ms *Microservice) createEntity10(message schema.Message) {
 	)
 
 	schema.FillStatusForMessage(&responseMessage, schema.OK)
-	ms.bus.SendMessage(responseMessage)
+
+	return responseMessage
 }
 
 func (ms *Microservice) deleteEntity10(message schema.Message) {
