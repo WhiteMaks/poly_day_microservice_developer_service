@@ -8,7 +8,7 @@ import (
 	"poly_day_microservice_developer_service/autogenerate/database"
 )
 
-func (ms *Microservice) getEntities10(message schema.Message) {
+func (ms *Microservice) getEntities10(message schema.Message) schema.Message {
 	ms.log.Info(
 		logger.Message{
 			ShortMessage: "the process of receiving entities has begun",
@@ -20,20 +20,9 @@ func (ms *Microservice) getEntities10(message schema.Message) {
 
 	responseMessage := schema.GenerateResponseMessage(message)
 
-	_, err := ms.store.GetDeveloperById(context.Background(), message.Meta.UserId)
+	err := ms.checkUser("the user was denied permission to receive entities", message.Meta, &responseMessage)
 	if err != nil {
-		ms.log.Warn(
-			logger.Message{
-				ShortMessage: "the user was denied permission to receive entities",
-				FullMessage:  err.Error(),
-				UserId:       message.Meta.UserId,
-				WsId:         message.Meta.WsId,
-			},
-		)
-
-		schema.FillStatusForMessage(&responseMessage, schema.NOT_AUTHORIZED)
-		ms.bus.SendMessage(responseMessage)
-		return
+		return responseMessage
 	}
 
 	dbEntities, err := ms.store.GetEntitiesByParentEntityId(context.Background(), 0)
@@ -48,8 +37,8 @@ func (ms *Microservice) getEntities10(message schema.Message) {
 		)
 
 		schema.FillStatusForMessage(&responseMessage, schema.INTERNAL_ERROR)
-		ms.bus.SendMessage(responseMessage)
-		return
+
+		return responseMessage
 	}
 
 	entitiesBody := make([]schema.Entity[any], len(dbEntities))
@@ -99,8 +88,8 @@ func (ms *Microservice) getEntities10(message schema.Message) {
 		)
 
 		schema.FillStatusForMessage(&responseMessage, schema.INTERNAL_ERROR)
-		ms.bus.SendMessage(responseMessage)
-		return
+
+		return responseMessage
 	}
 
 	ms.log.Info(
@@ -113,7 +102,8 @@ func (ms *Microservice) getEntities10(message schema.Message) {
 	)
 
 	schema.FillStatusForMessage(&responseMessage, schema.OK)
-	ms.bus.SendMessage(responseMessage)
+
+	return responseMessage
 }
 
 func (ms *Microservice) generateEntitiesForParent(parentEntity *schema.Entity[any], dbEntities []database.RootEntity) error {
