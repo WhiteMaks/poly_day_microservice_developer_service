@@ -284,7 +284,7 @@ func (ms *Microservice) createEntity10(message schema.Message) schema.Message {
 	return responseMessage
 }
 
-func (ms *Microservice) deleteEntity10(message schema.Message) {
+func (ms *Microservice) deleteEntity10(message schema.Message) schema.Message {
 	ms.log.Info(
 		logger.Message{
 			ShortMessage: "the process of deleting a entity has begun",
@@ -296,20 +296,9 @@ func (ms *Microservice) deleteEntity10(message schema.Message) {
 
 	responseMessage := schema.GenerateResponseMessage(message)
 
-	_, err := ms.store.GetDeveloperById(context.Background(), message.Meta.UserId)
+	err := ms.checkUser("the user was denied permission to delete an entity", message.Meta, &responseMessage)
 	if err != nil {
-		ms.log.Warn(
-			logger.Message{
-				ShortMessage: "the user was denied permission to delete an entity",
-				FullMessage:  err.Error(),
-				UserId:       message.Meta.UserId,
-				WsId:         message.Meta.WsId,
-			},
-		)
-
-		schema.FillStatusForMessage(&responseMessage, schema.NOT_AUTHORIZED)
-		ms.bus.SendMessage(responseMessage)
-		return
+		return responseMessage
 	}
 
 	requestBody, err := schema.GetDeleteEntity10RequestFromMessage(message)
@@ -324,8 +313,8 @@ func (ms *Microservice) deleteEntity10(message schema.Message) {
 		)
 
 		schema.FillStatusForMessage(&responseMessage, schema.BAD_REQUEST)
-		ms.bus.SendMessage(responseMessage)
-		return
+
+		return responseMessage
 	}
 
 	err = ms.cleanChildEntitiesByParentId(requestBody.ID)
@@ -340,8 +329,8 @@ func (ms *Microservice) deleteEntity10(message schema.Message) {
 		)
 
 		schema.FillStatusForMessage(&responseMessage, schema.INTERNAL_ERROR)
-		ms.bus.SendMessage(responseMessage)
-		return
+
+		return responseMessage
 	}
 
 	dbEntity, err := ms.store.GetEntityById(context.Background(), requestBody.ID)
@@ -356,8 +345,8 @@ func (ms *Microservice) deleteEntity10(message schema.Message) {
 		)
 
 		schema.FillStatusForMessage(&responseMessage, schema.NOT_FOUND)
-		ms.bus.SendMessage(responseMessage)
-		return
+
+		return responseMessage
 	}
 
 	switch schema.EntityType(dbEntity.Type) {
@@ -394,8 +383,8 @@ func (ms *Microservice) deleteEntity10(message schema.Message) {
 		)
 
 		schema.FillStatusForMessage(&responseMessage, schema.INTERNAL_ERROR)
-		ms.bus.SendMessage(responseMessage)
-		return
+
+		return responseMessage
 	}
 
 	ms.log.Info(
@@ -407,7 +396,8 @@ func (ms *Microservice) deleteEntity10(message schema.Message) {
 	)
 
 	schema.FillStatusForMessage(&responseMessage, schema.OK)
-	ms.bus.SendMessage(responseMessage)
+
+	return responseMessage
 }
 
 func (ms *Microservice) cleanChildEntitiesByParentId(parentId int64) error {

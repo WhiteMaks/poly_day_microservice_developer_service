@@ -212,7 +212,7 @@ func (ms *Microservice) rootMessageHandler(message schema.Message) {
 
 	case schema.CommandDeleteEntity10:
 		{
-			go ms.deleteEntity10(message)
+			go ms.bus.SendMessage(ms.deleteEntity10(message))
 			break
 		}
 
