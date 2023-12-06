@@ -1,0 +1,6 @@
+-- name: CreateShaderProgram :one
+INSERT INTO
+	root.shader_programs(name, user_id, release_id, shader_entity_id)
+VALUES
+	($1, $2, $3, $4)
+RETURNING *;

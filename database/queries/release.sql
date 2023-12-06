@@ -14,6 +14,14 @@ SET
 WHERE
 	id = $1;
 
+-- name: GetReleaseById :one
+SELECT
+	*
+FROM
+	root.releases
+WHERE
+	id = $1;
+
 -- name: DeleteReleaseById :exec
 DELETE FROM
 	root.releases
@@ -22,6 +30,6 @@ WHERE
 
 -- name: GetReleases :many
 SELECT
-    *
+	*
 FROM
-    root.releases;
+	root.releases;
