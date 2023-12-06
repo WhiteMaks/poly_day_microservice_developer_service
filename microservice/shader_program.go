@@ -8,6 +8,106 @@ import (
 	"poly_day_microservice_developer_service/autogenerate/database"
 )
 
+func (ms *Microservice) getShaderPrograms10(message schema.Message) schema.Message {
+	ms.log.Info(
+		logger.Message{
+			ShortMessage: "the process of receiving shader programs has begun",
+			FullMessage:  string(message.Body),
+			UserId:       message.Meta.UserId,
+			WsId:         message.Meta.WsId,
+		},
+	)
+
+	responseMessage := schema.GenerateResponseMessage(message)
+
+	err := ms.checkUser("the user was denied permission to receive shader programs", message.Meta, &responseMessage)
+	if err != nil {
+		return responseMessage
+	}
+
+	requestBody, err := schema.GetGetShaderPrograms10RequestFromMessage(message)
+	if err != nil {
+		ms.log.Warn(
+			logger.Message{
+				ShortMessage: "invalid request body for get shader programs",
+				FullMessage:  err.Error(),
+				UserId:       message.Meta.UserId,
+				WsId:         message.Meta.WsId,
+			},
+		)
+
+		schema.FillStatusForMessage(&responseMessage, schema.BAD_REQUEST)
+
+		return responseMessage
+	}
+
+	dbRelease, err := ms.store.GetReleaseById(context.Background(), requestBody.ReleaseId)
+	if err != nil {
+		ms.log.Warn(
+			logger.Message{
+				ShortMessage: "error when searching release in the database",
+				FullMessage:  err.Error(),
+				UserId:       message.Meta.UserId,
+				WsId:         message.Meta.WsId,
+			},
+		)
+
+		schema.FillStatusForMessage(&responseMessage, schema.NOT_FOUND)
+
+		return responseMessage
+	}
+
+	dbShaderPrograms, err := ms.store.GetShaderProgramsByReleaseId(context.Background(), dbRelease.ID)
+	if err != nil {
+		ms.log.Warn(
+			logger.Message{
+				ShortMessage: "error when searching shader programs in the database",
+				FullMessage:  err.Error(),
+				UserId:       message.Meta.UserId,
+				WsId:         message.Meta.WsId,
+			},
+		)
+
+		schema.FillStatusForMessage(&responseMessage, schema.INTERNAL_ERROR)
+
+		return responseMessage
+	}
+
+	shaderProgramsBody := make([]schema.ShaderProgram, len(dbShaderPrograms))
+
+	for i, value := range dbShaderPrograms {
+		shaderProgramsBody[i] = schema.GenerateShaderProgramStruct(value.ID, value.Name, value.ShaderEntityID)
+	}
+
+	err = schema.FillBodyGetShaderPrograms10ResponseForMessage(shaderProgramsBody, &responseMessage)
+	if err != nil {
+		ms.log.Error(
+			logger.Message{
+				ShortMessage: "error when filling out the body of the response to a request for shader programs",
+				FullMessage:  err.Error(),
+				UserId:       message.Meta.UserId,
+				WsId:         message.Meta.WsId,
+			},
+		)
+
+		schema.FillStatusForMessage(&responseMessage, schema.INTERNAL_ERROR)
+
+		return responseMessage
+	}
+
+	ms.log.Info(
+		logger.Message{
+			ShortMessage: fmt.Sprintf("the shader program receive process is complete. Sent shader programs [ %v ]", len(dbShaderPrograms)),
+			UserId:       message.Meta.UserId,
+			WsId:         message.Meta.WsId,
+		},
+	)
+
+	schema.FillStatusForMessage(&responseMessage, schema.OK)
+
+	return responseMessage
+}
+
 func (ms *Microservice) createShaderProgram10(message schema.Message) schema.Message {
 	ms.log.Info(
 		logger.Message{
