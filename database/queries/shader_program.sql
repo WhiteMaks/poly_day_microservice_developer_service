@@ -4,3 +4,11 @@ INSERT INTO
 VALUES
 	($1, $2, $3, $4)
 RETURNING *;
+
+-- name: GetShaderProgramsByReleaseId :many
+SELECT
+	*
+FROM
+	root.shader_programs
+WHERE
+	release_id = $1;
