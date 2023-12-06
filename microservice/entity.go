@@ -41,10 +41,10 @@ func (ms *Microservice) getEntities10(message schema.Message) schema.Message {
 		return responseMessage
 	}
 
-	entitiesBody := make([]schema.Entity[any], len(dbEntities))
+	entitiesBody := make([]schema.Entity, len(dbEntities))
 
 	for i, value := range dbEntities {
-		entityBody := schema.GenerateEntityStruct[any](value.ID, value.Name, schema.EntityType(value.Type), nil)
+		entityBody := schema.GenerateEntityStruct(value.ID, value.Name, schema.EntityType(value.Type))
 
 		dbEntityChildList, err := ms.store.GetEntitiesByParentEntityId(context.Background(), entityBody.ID)
 
@@ -106,11 +106,11 @@ func (ms *Microservice) getEntities10(message schema.Message) schema.Message {
 	return responseMessage
 }
 
-func (ms *Microservice) generateEntitiesForParent(parentEntity *schema.Entity[any], dbEntities []database.RootEntity) error {
-	entitiesBody := make([]schema.Entity[any], len(dbEntities))
+func (ms *Microservice) generateEntitiesForParent(parentEntity *schema.Entity, dbEntities []database.RootEntity) error {
+	entitiesBody := make([]schema.Entity, len(dbEntities))
 
 	for i, value := range dbEntities {
-		entityBody := schema.GenerateEntityStruct[any](value.ID, value.Name, schema.EntityType(value.Type), nil)
+		entityBody := schema.GenerateEntityStruct(value.ID, value.Name, schema.EntityType(value.Type))
 
 		dbEntitiesChild, err := ms.store.GetEntitiesByParentEntityId(context.Background(), entityBody.ID)
 		if err != nil {
@@ -195,17 +195,7 @@ func (ms *Microservice) createEntity10(message schema.Message) schema.Message {
 			return responseMessage
 		}
 
-		if schema.EntityType(dbParentEntity.Type) != schema.FOLDER {
-			ms.log.Warn(
-				logger.Message{
-					ShortMessage: fmt.Sprintf("parent entity type is [ %v ] not equal [ %v ]", requestBody.Type, string(schema.FOLDER)),
-					UserId:       message.Meta.UserId,
-					WsId:         message.Meta.WsId,
-				},
-			)
-
-			schema.FillStatusForMessage(&responseMessage, schema.BAD_REQUEST)
-
+		if !ms.dbEntityTypeIs(dbParentEntity, schema.FOLDER, message.Meta, &responseMessage) {
 			return responseMessage
 		}
 	}
@@ -452,4 +442,22 @@ func (ms *Microservice) cleanChildEntitiesByParentId(parentId int64) error {
 	}
 
 	return err
+}
+
+func (ms *Microservice) dbEntityTypeIs(dbEntity database.RootEntity, entityType schema.EntityType, meta schema.Meta, responseMessage *schema.Message) bool {
+	if schema.EntityType(dbEntity.Type) != schema.SHADER {
+		ms.log.Warn(
+			logger.Message{
+				ShortMessage: fmt.Sprintf("entity by id [ %v ] is not a [ %v ]", dbEntity.ID, entityType),
+				UserId:       meta.UserId,
+				WsId:         meta.WsId,
+			},
+		)
+
+		schema.FillStatusForMessage(responseMessage, schema.BAD_REQUEST)
+
+		return false
+	}
+
+	return true
 }

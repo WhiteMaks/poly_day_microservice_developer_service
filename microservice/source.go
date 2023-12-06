@@ -135,17 +135,7 @@ func (ms *Microservice) saveModelSource10(message schema.Message) schema.Message
 		return responseMessage
 	}
 
-	if schema.EntityType(dbEntity.Type) != schema.MODEL {
-		ms.log.Warn(
-			logger.Message{
-				ShortMessage: fmt.Sprintf("entity by id [ %v ] is not a model", dbEntity.ID),
-				UserId:       message.Meta.UserId,
-				WsId:         message.Meta.WsId,
-			},
-		)
-
-		schema.FillStatusForMessage(&responseMessage, schema.BAD_REQUEST)
-
+	if !ms.dbEntityTypeIs(dbEntity, schema.MODEL, message.Meta, &responseMessage) {
 		return responseMessage
 	}
 
@@ -320,17 +310,7 @@ func (ms *Microservice) saveShaderSource10(message schema.Message) schema.Messag
 		return responseMessage
 	}
 
-	if schema.EntityType(dbEntity.Type) != schema.SHADER {
-		ms.log.Warn(
-			logger.Message{
-				ShortMessage: fmt.Sprintf("entity by id [ %v ] is not a shader", dbEntity.ID),
-				UserId:       message.Meta.UserId,
-				WsId:         message.Meta.WsId,
-			},
-		)
-
-		schema.FillStatusForMessage(&responseMessage, schema.BAD_REQUEST)
-
+	if !ms.dbEntityTypeIs(dbEntity, schema.SHADER, message.Meta, &responseMessage) {
 		return responseMessage
 	}
 
