@@ -245,6 +245,12 @@ func (ms *Microservice) rootMessageHandler(message schema.Message) {
 			go ms.bus.SendMessage(ms.createShaderProgram10(message))
 			break
 		}
+
+	case schema.CommandGetShaderPrograms10:
+		{
+			go ms.bus.SendMessage(ms.getShaderPrograms10(message))
+			break
+		}
 	}
 }
 
