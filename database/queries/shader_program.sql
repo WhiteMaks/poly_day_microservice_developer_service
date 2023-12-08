@@ -12,3 +12,17 @@ FROM
 	root.shader_programs
 WHERE
 	release_id = $1;
+
+-- name: GetShaderProgramById :one
+SELECT
+	*
+FROM
+	root.shader_programs
+WHERE
+	id = $1;
+
+-- name: DeleteShaderProgramById :exec
+DELETE FROM
+	root.entities
+WHERE
+	id = $1;

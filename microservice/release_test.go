@@ -159,7 +159,7 @@ func TestMicroservice_CreateRelease10_INTERNAL_ERROR(t *testing.T) {
 	checkErrorResponse(t, schema.INTERNAL_ERROR, actualMessage)
 }
 
-func TestMicroservice_CreateDelete10(t *testing.T) {
+func TestMicroservice_DeleteRelease10(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 

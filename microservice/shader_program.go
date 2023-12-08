@@ -228,3 +228,81 @@ func (ms *Microservice) createShaderProgram10(message schema.Message) schema.Mes
 
 	return responseMessage
 }
+
+func (ms *Microservice) deleteShaderProgram10(message schema.Message) schema.Message {
+	ms.log.Info(
+		logger.Message{
+			ShortMessage: "the process of deleting a shader program has begun",
+			FullMessage:  string(message.Body),
+			UserId:       message.Meta.UserId,
+			WsId:         message.Meta.WsId,
+		},
+	)
+
+	responseMessage := schema.GenerateResponseMessage(message)
+
+	err := ms.checkUser("the user was denied permission to delete a shader program", message.Meta, &responseMessage)
+	if err != nil {
+		return responseMessage
+	}
+
+	requestBody, err := schema.GetDeleteShaderProgram10RequestFromMessage(message)
+	if err != nil {
+		ms.log.Warn(
+			logger.Message{
+				ShortMessage: "invalid request body for delete shader program",
+				FullMessage:  err.Error(),
+				UserId:       message.Meta.UserId,
+				WsId:         message.Meta.WsId,
+			},
+		)
+
+		schema.FillStatusForMessage(&responseMessage, schema.BAD_REQUEST)
+
+		return responseMessage
+	}
+
+	dbShaderProgram, err := ms.store.GetShaderProgramById(context.Background(), requestBody.ID)
+	if err != nil {
+		ms.log.Warn(
+			logger.Message{
+				ShortMessage: "error when searching shader program in the database",
+				FullMessage:  err.Error(),
+				UserId:       message.Meta.UserId,
+				WsId:         message.Meta.WsId,
+			},
+		)
+
+		schema.FillStatusForMessage(&responseMessage, schema.NOT_FOUND)
+
+		return responseMessage
+	}
+
+	err = ms.store.DeleteShaderProgramById(context.Background(), dbShaderProgram.ID)
+	if err != nil {
+		ms.log.Error(
+			logger.Message{
+				ShortMessage: "error when deleting a shader program in the database",
+				FullMessage:  err.Error(),
+				UserId:       message.Meta.UserId,
+				WsId:         message.Meta.WsId,
+			},
+		)
+
+		schema.FillStatusForMessage(&responseMessage, schema.INTERNAL_ERROR)
+
+		return responseMessage
+	}
+
+	ms.log.Info(
+		logger.Message{
+			ShortMessage: fmt.Sprintf("the shader program deletion process is complete. Deleted shader program [ %v ]", dbShaderProgram.ID),
+			UserId:       message.Meta.UserId,
+			WsId:         message.Meta.WsId,
+		},
+	)
+
+	schema.FillStatusForMessage(&responseMessage, schema.OK)
+
+	return responseMessage
+}

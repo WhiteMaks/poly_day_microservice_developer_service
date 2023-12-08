@@ -316,6 +316,184 @@ func TestMicroservice_CreateShaderProgram10_INTERNAL_ERROR(t *testing.T) {
 	checkErrorResponse(t, schema.INTERNAL_ERROR, actualMessage)
 }
 
+func TestMicroservice_DeleteShaderProgram10(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	store := mockdatabase.NewMockStore(ctrl)
+	ms := newMs(store)
+
+	dbDeveloper := generateRandomDBDeveloper()
+	dbRelease := generateRandomDBRelease()
+	dbShaderEntity := generateRandomDBShaderEntity()
+	dbShaderProgram := generateRandomDBShaderProgram(dbRelease.ID, dbShaderEntity.ID)
+
+	testMicroserviceDeleteShaderProgramMockDB(store, dbDeveloper, dbShaderProgram)
+
+	requestMessage := prepareRequestMessage(dbDeveloper.UserID)
+	body := schema.DeleteShaderProgram10Request{
+		ID: dbShaderProgram.ID,
+	}
+	bodyBytes, err := json.Marshal(body)
+	assert.NoError(t, err, "Error must be nil")
+	requestMessage.Body = bodyBytes
+
+	actualMessage := ms.deleteShaderProgram10(requestMessage)
+	assert.NoError(t, err, "Error must be nil")
+
+	checkResponseWithoutBody(t, requestMessage, actualMessage)
+	checkSuccessResponseWithBodyNil(t, actualMessage)
+}
+
+func TestMicroservice_DeleteShaderProgram10_NOT_AUTHORIZED(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	store := mockdatabase.NewMockStore(ctrl)
+	ms := newMs(store)
+
+	dbDeveloper := generateRandomDBDeveloper()
+	dbRelease := generateRandomDBRelease()
+	dbShaderEntity := generateRandomDBShaderEntity()
+	dbShaderProgram := generateRandomDBShaderProgram(dbRelease.ID, dbShaderEntity.ID)
+
+	testMicroserviceUserNotExistMockDB(store, dbDeveloper)
+
+	requestMessage := prepareRequestMessage(dbDeveloper.UserID)
+	body := schema.DeleteShaderProgram10Request{
+		ID: dbShaderProgram.ID,
+	}
+	bodyBytes, err := json.Marshal(body)
+	assert.NoError(t, err, "Error must be nil")
+	requestMessage.Body = bodyBytes
+
+	actualMessage := ms.deleteShaderProgram10(requestMessage)
+	assert.NoError(t, err, "Error must be nil")
+
+	checkResponseWithoutBody(t, requestMessage, actualMessage)
+	checkErrorResponse(t, schema.NOT_AUTHORIZED, actualMessage)
+}
+
+func TestMicroservice_DeleteShaderProgram10_NOT_FOUND(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	store := mockdatabase.NewMockStore(ctrl)
+	ms := newMs(store)
+
+	dbDeveloper := generateRandomDBDeveloper()
+	dbRelease := generateRandomDBRelease()
+	dbShaderEntity := generateRandomDBShaderEntity()
+	dbShaderProgram := generateRandomDBShaderProgram(dbRelease.ID, dbShaderEntity.ID)
+
+	testMicroserviceDeleteShaderProgramErrorShaderProgramMockDB(store, dbDeveloper, dbShaderProgram)
+
+	requestMessage := prepareRequestMessage(dbDeveloper.UserID)
+	body := schema.DeleteShaderProgram10Request{
+		ID: dbShaderProgram.ID,
+	}
+	bodyBytes, err := json.Marshal(body)
+	assert.NoError(t, err, "Error must be nil")
+	requestMessage.Body = bodyBytes
+
+	actualMessage := ms.deleteShaderProgram10(requestMessage)
+	assert.NoError(t, err, "Error must be nil")
+
+	checkResponseWithoutBody(t, requestMessage, actualMessage)
+	checkErrorResponse(t, schema.NOT_FOUND, actualMessage)
+}
+
+func TestMicroservice_DeleteShaderProgram10_INTERNAL_ERROR(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	store := mockdatabase.NewMockStore(ctrl)
+	ms := newMs(store)
+
+	dbDeveloper := generateRandomDBDeveloper()
+	dbRelease := generateRandomDBRelease()
+	dbShaderEntity := generateRandomDBShaderEntity()
+	dbShaderProgram := generateRandomDBShaderProgram(dbRelease.ID, dbShaderEntity.ID)
+
+	testMicroserviceDeleteShaderProgramErrorMockDB(store, dbDeveloper, dbShaderProgram)
+
+	requestMessage := prepareRequestMessage(dbDeveloper.UserID)
+	body := schema.DeleteShaderProgram10Request{
+		ID: dbShaderProgram.ID,
+	}
+	bodyBytes, err := json.Marshal(body)
+	assert.NoError(t, err, "Error must be nil")
+	requestMessage.Body = bodyBytes
+
+	actualMessage := ms.deleteShaderProgram10(requestMessage)
+	assert.NoError(t, err, "Error must be nil")
+
+	checkResponseWithoutBody(t, requestMessage, actualMessage)
+	checkErrorResponse(t, schema.INTERNAL_ERROR, actualMessage)
+}
+
+func testMicroserviceDeleteShaderProgramErrorMockDB(store *mockdatabase.MockStore, dbDeveloper database.RootDeveloper, dbShaderProgram database.RootShaderProgram) {
+	store.EXPECT().
+		GetDeveloperById(
+			gomock.Any(),
+			gomock.Eq(dbDeveloper.UserID),
+		).Times(1).
+		Return(dbDeveloper, nil)
+
+	store.EXPECT().
+		GetShaderProgramById(
+			gomock.Any(),
+			gomock.Eq(dbShaderProgram.ID),
+		).Times(1).
+		Return(dbShaderProgram, nil)
+
+	store.EXPECT().
+		DeleteShaderProgramById(
+			gomock.Any(),
+			gomock.Eq(dbShaderProgram.ID),
+		).Times(1).
+		Return(errors.New("unexpected error"))
+}
+
+func testMicroserviceDeleteShaderProgramErrorShaderProgramMockDB(store *mockdatabase.MockStore, dbDeveloper database.RootDeveloper, dbShaderProgram database.RootShaderProgram) {
+	store.EXPECT().
+		GetDeveloperById(
+			gomock.Any(),
+			gomock.Eq(dbDeveloper.UserID),
+		).Times(1).
+		Return(dbDeveloper, nil)
+
+	store.EXPECT().
+		GetShaderProgramById(
+			gomock.Any(),
+			gomock.Eq(dbShaderProgram.ID),
+		).Times(1).
+		Return(database.RootShaderProgram{}, errors.New("unexpected error"))
+}
+
+func testMicroserviceDeleteShaderProgramMockDB(store *mockdatabase.MockStore, dbDeveloper database.RootDeveloper, dbShaderProgram database.RootShaderProgram) {
+	store.EXPECT().
+		GetDeveloperById(
+			gomock.Any(),
+			gomock.Eq(dbDeveloper.UserID),
+		).Times(1).
+		Return(dbDeveloper, nil)
+
+	store.EXPECT().
+		GetShaderProgramById(
+			gomock.Any(),
+			gomock.Eq(dbShaderProgram.ID),
+		).Times(1).
+		Return(dbShaderProgram, nil)
+
+	store.EXPECT().
+		DeleteShaderProgramById(
+			gomock.Any(),
+			gomock.Eq(dbShaderProgram.ID),
+		).Times(1).
+		Return(nil)
+}
+
 func testMicroserviceGetShaderProgramsErrorMockDB(store *mockdatabase.MockStore, dbDeveloper database.RootDeveloper, dbRelease database.RootRelease) {
 	store.EXPECT().
 		GetDeveloperById(
