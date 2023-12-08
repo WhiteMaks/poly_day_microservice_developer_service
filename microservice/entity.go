@@ -444,7 +444,7 @@ func (ms *Microservice) cleanChildEntitiesByParentId(parentId int64) error {
 }
 
 func (ms *Microservice) dbEntityTypeIs(dbEntity database.RootEntity, entityType schema.EntityType, meta schema.Meta, responseMessage *schema.Message) bool {
-	if schema.EntityType(dbEntity.Type) != schema.SHADER {
+	if schema.EntityType(dbEntity.Type) != entityType {
 		ms.log.Warn(
 			logger.Message{
 				ShortMessage: fmt.Sprintf("entity by id [ %v ] is not a [ %v ]", dbEntity.ID, entityType),
