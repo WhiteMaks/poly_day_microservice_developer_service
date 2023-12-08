@@ -277,7 +277,7 @@ func (ms *Microservice) createEntity10(message schema.Message) schema.Message {
 func (ms *Microservice) deleteEntity10(message schema.Message) schema.Message {
 	ms.log.Info(
 		logger.Message{
-			ShortMessage: "the process of deleting a entity has begun",
+			ShortMessage: "the process of deleting an entity has begun",
 			FullMessage:  string(message.Body),
 			UserId:       message.Meta.UserId,
 			WsId:         message.Meta.WsId,
@@ -361,7 +361,6 @@ func (ms *Microservice) deleteEntity10(message schema.Message) schema.Message {
 
 	}
 
-	err = ms.store.DeleteEntityById(context.Background(), dbEntity.ID)
 	if err != nil {
 		ms.log.Error(
 			logger.Message{
