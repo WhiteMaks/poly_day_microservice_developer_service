@@ -16,3 +16,12 @@ FOREIGN KEY
 	(shader_entity_id)
 REFERENCES
 	root.entities (id);
+
+ALTER TABLE
+	root.shader_programs
+ADD CONSTRAINT
+	fk_release_id
+FOREIGN KEY
+	(release_id)
+REFERENCES
+	root.releases (id);
