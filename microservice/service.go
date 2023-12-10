@@ -182,62 +182,101 @@ func (ms *Microservice) rootMessageHandler(message schema.Message) {
 
 	case schema.CommandCreateRelease10:
 		{
-			go ms.createRelease10(message)
+			go ms.bus.SendMessage(ms.createRelease10(message))
 			break
 		}
 
 	case schema.CommandGetReleases10:
 		{
-			go ms.getReleases10(message)
+			go ms.bus.SendMessage(ms.getReleases10(message))
 			break
 		}
 
 	case schema.CommandDeleteRelease10:
 		{
-			go ms.deleteRelease10(message)
+			go ms.bus.SendMessage(ms.deleteRelease10(message))
 			break
 		}
 
 	case schema.CommandCreateEntity10:
 		{
-			go ms.createEntity10(message)
+			go ms.bus.SendMessage(ms.createEntity10(message))
 			break
 		}
 
 	case schema.CommandGetEntities10:
 		{
-			go ms.getEntities10(message)
+			go ms.bus.SendMessage(ms.getEntities10(message))
 			break
 		}
 
 	case schema.CommandDeleteEntity10:
 		{
-			go ms.deleteEntity10(message)
+			go ms.bus.SendMessage(ms.deleteEntity10(message))
 			break
 		}
 
 	case schema.CommandSaveModelSource10:
 		{
-			go ms.saveModelSource10(message)
+			go ms.bus.SendMessage(ms.saveModelSource10(message))
 			break
 		}
 
 	case schema.CommandGetModelSource10:
 		{
-			go ms.getModelSource10(message)
+			go ms.bus.SendMessage(ms.getModelSource10(message))
 			break
 		}
 
 	case schema.CommandSaveShaderSource10:
 		{
-			go ms.saveShaderSource10(message)
+			go ms.bus.SendMessage(ms.saveShaderSource10(message))
 			break
 		}
 
 	case schema.CommandGetShaderSource10:
 		{
-			go ms.getShaderSource10(message)
+			go ms.bus.SendMessage(ms.getShaderSource10(message))
 			break
 		}
+
+	case schema.CommandCreateShaderProgram10:
+		{
+			go ms.bus.SendMessage(ms.createShaderProgram10(message))
+			break
+		}
+
+	case schema.CommandGetShaderPrograms10:
+		{
+			go ms.bus.SendMessage(ms.getShaderPrograms10(message))
+			break
+		}
+
+	case schema.CommandDeleteShaderProgram10:
+		{
+			go ms.bus.SendMessage(ms.deleteShaderProgram10(message))
+			break
+		}
+
 	}
+}
+
+func (ms *Microservice) checkUser(errorMessage string, meta schema.Meta, responseMessage *schema.Message) error {
+	_, err := ms.store.GetDeveloperById(context.Background(), meta.UserId)
+	if err != nil {
+		ms.log.Warn(
+			logger.Message{
+				ShortMessage: errorMessage,
+				FullMessage:  err.Error(),
+				UserId:       meta.UserId,
+				WsId:         meta.WsId,
+			},
+		)
+
+		schema.FillStatusForMessage(responseMessage, schema.NOT_AUTHORIZED)
+
+		return err
+	}
+
+	return nil
 }

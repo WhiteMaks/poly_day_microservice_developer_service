@@ -1,0 +1,1 @@
+DROP TABLE root.shader_programs;

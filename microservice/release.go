@@ -8,7 +8,7 @@ import (
 	"poly_day_microservice_developer_service/autogenerate/database"
 )
 
-func (ms *Microservice) getReleases10(message schema.Message) {
+func (ms *Microservice) getReleases10(message schema.Message) schema.Message {
 	ms.log.Info(
 		logger.Message{
 			ShortMessage: "the process of receiving releases has begun",
@@ -20,20 +20,9 @@ func (ms *Microservice) getReleases10(message schema.Message) {
 
 	responseMessage := schema.GenerateResponseMessage(message)
 
-	_, err := ms.store.GetDeveloperById(context.Background(), message.Meta.UserId)
+	err := ms.checkUser("the user was denied permission to receive releases", message.Meta, &responseMessage)
 	if err != nil {
-		ms.log.Warn(
-			logger.Message{
-				ShortMessage: "the user was denied permission to receive releases",
-				FullMessage:  err.Error(),
-				UserId:       message.Meta.UserId,
-				WsId:         message.Meta.WsId,
-			},
-		)
-
-		schema.FillStatusForMessage(&responseMessage, schema.NOT_AUTHORIZED)
-		ms.bus.SendMessage(responseMessage)
-		return
+		return responseMessage
 	}
 
 	dbReleases, err := ms.store.GetReleases(context.Background())
@@ -48,8 +37,8 @@ func (ms *Microservice) getReleases10(message schema.Message) {
 		)
 
 		schema.FillStatusForMessage(&responseMessage, schema.INTERNAL_ERROR)
-		ms.bus.SendMessage(responseMessage)
-		return
+
+		return responseMessage
 	}
 
 	releasesBody := make([]schema.Release, len(dbReleases))
@@ -70,8 +59,8 @@ func (ms *Microservice) getReleases10(message schema.Message) {
 		)
 
 		schema.FillStatusForMessage(&responseMessage, schema.INTERNAL_ERROR)
-		ms.bus.SendMessage(responseMessage)
-		return
+
+		return responseMessage
 	}
 
 	ms.log.Info(
@@ -83,10 +72,11 @@ func (ms *Microservice) getReleases10(message schema.Message) {
 	)
 
 	schema.FillStatusForMessage(&responseMessage, schema.OK)
-	ms.bus.SendMessage(responseMessage)
+
+	return responseMessage
 }
 
-func (ms *Microservice) createRelease10(message schema.Message) {
+func (ms *Microservice) createRelease10(message schema.Message) schema.Message {
 	ms.log.Info(
 		logger.Message{
 			ShortMessage: "the process of creating a release has begun",
@@ -98,20 +88,9 @@ func (ms *Microservice) createRelease10(message schema.Message) {
 
 	responseMessage := schema.GenerateResponseMessage(message)
 
-	_, err := ms.store.GetDeveloperById(context.Background(), message.Meta.UserId)
+	err := ms.checkUser("the user was denied permission to create a release", message.Meta, &responseMessage)
 	if err != nil {
-		ms.log.Warn(
-			logger.Message{
-				ShortMessage: "the user was denied permission to create a release",
-				FullMessage:  err.Error(),
-				UserId:       message.Meta.UserId,
-				WsId:         message.Meta.WsId,
-			},
-		)
-
-		schema.FillStatusForMessage(&responseMessage, schema.NOT_AUTHORIZED)
-		ms.bus.SendMessage(responseMessage)
-		return
+		return responseMessage
 	}
 
 	requestBody, err := schema.GetCreateRelease10RequestFromMessage(message)
@@ -126,8 +105,8 @@ func (ms *Microservice) createRelease10(message schema.Message) {
 		)
 
 		schema.FillStatusForMessage(&responseMessage, schema.BAD_REQUEST)
-		ms.bus.SendMessage(responseMessage)
-		return
+
+		return responseMessage
 	}
 
 	createReleaseArgs := database.CreateReleaseParams{
@@ -147,8 +126,8 @@ func (ms *Microservice) createRelease10(message schema.Message) {
 		)
 
 		schema.FillStatusForMessage(&responseMessage, schema.INTERNAL_ERROR)
-		ms.bus.SendMessage(responseMessage)
-		return
+
+		return responseMessage
 	}
 
 	err = schema.FillBodyCreateRelease10ResponseForMessage(dbRelease.ID, &responseMessage)
@@ -163,8 +142,8 @@ func (ms *Microservice) createRelease10(message schema.Message) {
 		)
 
 		schema.FillStatusForMessage(&responseMessage, schema.INTERNAL_ERROR)
-		ms.bus.SendMessage(responseMessage)
-		return
+
+		return responseMessage
 	}
 
 	ms.log.Info(
@@ -176,10 +155,11 @@ func (ms *Microservice) createRelease10(message schema.Message) {
 	)
 
 	schema.FillStatusForMessage(&responseMessage, schema.OK)
-	ms.bus.SendMessage(responseMessage)
+
+	return responseMessage
 }
 
-func (ms *Microservice) deleteRelease10(message schema.Message) {
+func (ms *Microservice) deleteRelease10(message schema.Message) schema.Message {
 	ms.log.Info(
 		logger.Message{
 			ShortMessage: "the process of deleting a release has begun",
@@ -191,20 +171,9 @@ func (ms *Microservice) deleteRelease10(message schema.Message) {
 
 	responseMessage := schema.GenerateResponseMessage(message)
 
-	_, err := ms.store.GetDeveloperById(context.Background(), message.Meta.UserId)
+	err := ms.checkUser("the user was denied permission to delete a release", message.Meta, &responseMessage)
 	if err != nil {
-		ms.log.Warn(
-			logger.Message{
-				ShortMessage: "the user was denied permission to create a release",
-				FullMessage:  err.Error(),
-				UserId:       message.Meta.UserId,
-				WsId:         message.Meta.WsId,
-			},
-		)
-
-		schema.FillStatusForMessage(&responseMessage, schema.NOT_AUTHORIZED)
-		ms.bus.SendMessage(responseMessage)
-		return
+		return responseMessage
 	}
 
 	requestBody, err := schema.GetDeleteRelease10RequestFromMessage(message)
@@ -219,8 +188,8 @@ func (ms *Microservice) deleteRelease10(message schema.Message) {
 		)
 
 		schema.FillStatusForMessage(&responseMessage, schema.BAD_REQUEST)
-		ms.bus.SendMessage(responseMessage)
-		return
+
+		return responseMessage
 	}
 
 	err = ms.store.DeleteReleaseById(context.Background(), requestBody.ID)
@@ -235,8 +204,8 @@ func (ms *Microservice) deleteRelease10(message schema.Message) {
 		)
 
 		schema.FillStatusForMessage(&responseMessage, schema.INTERNAL_ERROR)
-		ms.bus.SendMessage(responseMessage)
-		return
+
+		return responseMessage
 	}
 
 	ms.log.Info(
@@ -248,5 +217,6 @@ func (ms *Microservice) deleteRelease10(message schema.Message) {
 	)
 
 	schema.FillStatusForMessage(&responseMessage, schema.OK)
-	ms.bus.SendMessage(responseMessage)
+
+	return responseMessage
 }

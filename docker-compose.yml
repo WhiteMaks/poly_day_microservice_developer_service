@@ -4,20 +4,18 @@ services:
 
   postgresql:
     image: postgres:14.2-alpine
-    container_name: poly_day_microservice_developer_service_postgresql
+    container_name: poly_day_microservice_developer_service_postgresql_test
     environment:
       POSTGRES_DB: "developer_service"
       POSTGRES_USER: "user"
       POSTGRES_PASSWORD: "password"
       PGDATA: "/var/lib/postgresql/data/.database"
-    volumes:
-      - .:/var/lib/postgresql/data
     ports:
       - "25432:5432"
 
   rabbitmq:
     image: rabbitmq:3-management-alpine
-    container_name: poly_day_microservice_developer_service_rabbitmq
+    container_name: poly_day_microservice_developer_service_rabbitmq_test
     environment:
       RABBITMQ_DEFAULT_USER: "user"
       RABBITMQ_DEFAULT_PASS: "password"

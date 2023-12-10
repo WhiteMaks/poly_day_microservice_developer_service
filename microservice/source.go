@@ -9,7 +9,7 @@ import (
 	"poly_day_microservice_developer_service/autogenerate/database"
 )
 
-func (ms *Microservice) getModelSource10(message schema.Message) {
+func (ms *Microservice) getModelSource10(message schema.Message) schema.Message {
 	ms.log.Info(
 		logger.Message{
 			ShortMessage: "the process of receiving model source has begun",
@@ -21,20 +21,9 @@ func (ms *Microservice) getModelSource10(message schema.Message) {
 
 	responseMessage := schema.GenerateResponseMessage(message)
 
-	_, err := ms.store.GetDeveloperById(context.Background(), message.Meta.UserId)
+	err := ms.checkUser("the user was denied permission to receive model source", message.Meta, &responseMessage)
 	if err != nil {
-		ms.log.Warn(
-			logger.Message{
-				ShortMessage: "the user was denied permission to receive model source",
-				FullMessage:  err.Error(),
-				UserId:       message.Meta.UserId,
-				WsId:         message.Meta.WsId,
-			},
-		)
-
-		schema.FillStatusForMessage(&responseMessage, schema.NOT_AUTHORIZED)
-		ms.bus.SendMessage(responseMessage)
-		return
+		return responseMessage
 	}
 
 	requestBody, err := schema.GetGetModelSource10RequestFromMessage(message)
@@ -49,8 +38,8 @@ func (ms *Microservice) getModelSource10(message schema.Message) {
 		)
 
 		schema.FillStatusForMessage(&responseMessage, schema.BAD_REQUEST)
-		ms.bus.SendMessage(responseMessage)
-		return
+
+		return responseMessage
 	}
 
 	dbModelSource, err := ms.store.GetModelSourceByEntityId(context.Background(), requestBody.EntityId)
@@ -65,8 +54,8 @@ func (ms *Microservice) getModelSource10(message schema.Message) {
 		)
 
 		schema.FillStatusForMessage(&responseMessage, schema.INTERNAL_ERROR)
-		ms.bus.SendMessage(responseMessage)
-		return
+
+		return responseMessage
 	}
 
 	err = schema.FillBodyGetModelSource10ResponseForMessage(dbModelSource.ID, dbModelSource.SourceBase64.String, &responseMessage)
@@ -81,8 +70,8 @@ func (ms *Microservice) getModelSource10(message schema.Message) {
 		)
 
 		schema.FillStatusForMessage(&responseMessage, schema.INTERNAL_ERROR)
-		ms.bus.SendMessage(responseMessage)
-		return
+
+		return responseMessage
 	}
 
 	ms.log.Info(
@@ -94,10 +83,11 @@ func (ms *Microservice) getModelSource10(message schema.Message) {
 	)
 
 	schema.FillStatusForMessage(&responseMessage, schema.OK)
-	ms.bus.SendMessage(responseMessage)
+
+	return responseMessage
 }
 
-func (ms *Microservice) saveModelSource10(message schema.Message) {
+func (ms *Microservice) saveModelSource10(message schema.Message) schema.Message {
 	ms.log.Info(
 		logger.Message{
 			ShortMessage: "the process of saving model source has begun",
@@ -108,20 +98,9 @@ func (ms *Microservice) saveModelSource10(message schema.Message) {
 
 	responseMessage := schema.GenerateResponseMessage(message)
 
-	_, err := ms.store.GetDeveloperById(context.Background(), message.Meta.UserId)
+	err := ms.checkUser("the user was denied permission to saving model source", message.Meta, &responseMessage)
 	if err != nil {
-		ms.log.Warn(
-			logger.Message{
-				ShortMessage: "the user was denied permission to saving model source",
-				FullMessage:  err.Error(),
-				UserId:       message.Meta.UserId,
-				WsId:         message.Meta.WsId,
-			},
-		)
-
-		schema.FillStatusForMessage(&responseMessage, schema.NOT_AUTHORIZED)
-		ms.bus.SendMessage(responseMessage)
-		return
+		return responseMessage
 	}
 
 	requestBody, err := schema.GetSaveModelSource10RequestFromMessage(message)
@@ -136,8 +115,8 @@ func (ms *Microservice) saveModelSource10(message schema.Message) {
 		)
 
 		schema.FillStatusForMessage(&responseMessage, schema.BAD_REQUEST)
-		ms.bus.SendMessage(responseMessage)
-		return
+
+		return responseMessage
 	}
 
 	dbEntity, err := ms.store.GetEntityById(context.Background(), requestBody.EntityId)
@@ -152,22 +131,12 @@ func (ms *Microservice) saveModelSource10(message schema.Message) {
 		)
 
 		schema.FillStatusForMessage(&responseMessage, schema.NOT_FOUND)
-		ms.bus.SendMessage(responseMessage)
-		return
+
+		return responseMessage
 	}
 
-	if schema.EntityType(dbEntity.Type) != schema.MODEL {
-		ms.log.Warn(
-			logger.Message{
-				ShortMessage: fmt.Sprintf("entity by id [ %v ] is not a model", dbEntity.ID),
-				UserId:       message.Meta.UserId,
-				WsId:         message.Meta.WsId,
-			},
-		)
-
-		schema.FillStatusForMessage(&responseMessage, schema.BAD_REQUEST)
-		ms.bus.SendMessage(responseMessage)
-		return
+	if !ms.dbEntityTypeIs(dbEntity, schema.MODEL, message.Meta, &responseMessage) {
+		return responseMessage
 	}
 
 	var sourceBase64 sql.NullString
@@ -198,8 +167,8 @@ func (ms *Microservice) saveModelSource10(message schema.Message) {
 		)
 
 		schema.FillStatusForMessage(&responseMessage, schema.INTERNAL_ERROR)
-		ms.bus.SendMessage(responseMessage)
-		return
+
+		return responseMessage
 	}
 
 	ms.log.Info(
@@ -211,10 +180,11 @@ func (ms *Microservice) saveModelSource10(message schema.Message) {
 	)
 
 	schema.FillStatusForMessage(&responseMessage, schema.OK)
-	ms.bus.SendMessage(responseMessage)
+
+	return responseMessage
 }
 
-func (ms *Microservice) getShaderSource10(message schema.Message) {
+func (ms *Microservice) getShaderSource10(message schema.Message) schema.Message {
 	ms.log.Info(
 		logger.Message{
 			ShortMessage: "the process of receiving shader source has begun",
@@ -226,20 +196,9 @@ func (ms *Microservice) getShaderSource10(message schema.Message) {
 
 	responseMessage := schema.GenerateResponseMessage(message)
 
-	_, err := ms.store.GetDeveloperById(context.Background(), message.Meta.UserId)
+	err := ms.checkUser("the user was denied permission to receive shader source", message.Meta, &responseMessage)
 	if err != nil {
-		ms.log.Warn(
-			logger.Message{
-				ShortMessage: "the user was denied permission to receive shader source",
-				FullMessage:  err.Error(),
-				UserId:       message.Meta.UserId,
-				WsId:         message.Meta.WsId,
-			},
-		)
-
-		schema.FillStatusForMessage(&responseMessage, schema.NOT_AUTHORIZED)
-		ms.bus.SendMessage(responseMessage)
-		return
+		return responseMessage
 	}
 
 	requestBody, err := schema.GetGetShaderSource10RequestFromMessage(message)
@@ -254,8 +213,8 @@ func (ms *Microservice) getShaderSource10(message schema.Message) {
 		)
 
 		schema.FillStatusForMessage(&responseMessage, schema.BAD_REQUEST)
-		ms.bus.SendMessage(responseMessage)
-		return
+
+		return responseMessage
 	}
 
 	dbShaderSource, err := ms.store.GetShaderSourceByEntityId(context.Background(), requestBody.EntityId)
@@ -270,8 +229,8 @@ func (ms *Microservice) getShaderSource10(message schema.Message) {
 		)
 
 		schema.FillStatusForMessage(&responseMessage, schema.INTERNAL_ERROR)
-		ms.bus.SendMessage(responseMessage)
-		return
+
+		return responseMessage
 	}
 
 	err = schema.FillBodyGetShaderSource10ResponseForMessage(dbShaderSource.ID, dbShaderSource.VertexShader.String, dbShaderSource.FragmentShader.String, &responseMessage)
@@ -286,8 +245,8 @@ func (ms *Microservice) getShaderSource10(message schema.Message) {
 		)
 
 		schema.FillStatusForMessage(&responseMessage, schema.INTERNAL_ERROR)
-		ms.bus.SendMessage(responseMessage)
-		return
+
+		return responseMessage
 	}
 
 	ms.log.Info(
@@ -299,10 +258,11 @@ func (ms *Microservice) getShaderSource10(message schema.Message) {
 	)
 
 	schema.FillStatusForMessage(&responseMessage, schema.OK)
-	ms.bus.SendMessage(responseMessage)
+
+	return responseMessage
 }
 
-func (ms *Microservice) saveShaderSource10(message schema.Message) {
+func (ms *Microservice) saveShaderSource10(message schema.Message) schema.Message {
 	ms.log.Info(
 		logger.Message{
 			ShortMessage: "the process of saving shader source has begun",
@@ -313,20 +273,9 @@ func (ms *Microservice) saveShaderSource10(message schema.Message) {
 
 	responseMessage := schema.GenerateResponseMessage(message)
 
-	_, err := ms.store.GetDeveloperById(context.Background(), message.Meta.UserId)
+	err := ms.checkUser("the user was denied permission to saving shader source", message.Meta, &responseMessage)
 	if err != nil {
-		ms.log.Warn(
-			logger.Message{
-				ShortMessage: "the user was denied permission to saving shader source",
-				FullMessage:  err.Error(),
-				UserId:       message.Meta.UserId,
-				WsId:         message.Meta.WsId,
-			},
-		)
-
-		schema.FillStatusForMessage(&responseMessage, schema.NOT_AUTHORIZED)
-		ms.bus.SendMessage(responseMessage)
-		return
+		return responseMessage
 	}
 
 	requestBody, err := schema.GetSaveShaderSource10RequestFromMessage(message)
@@ -341,8 +290,8 @@ func (ms *Microservice) saveShaderSource10(message schema.Message) {
 		)
 
 		schema.FillStatusForMessage(&responseMessage, schema.BAD_REQUEST)
-		ms.bus.SendMessage(responseMessage)
-		return
+
+		return responseMessage
 	}
 
 	dbEntity, err := ms.store.GetEntityById(context.Background(), requestBody.EntityId)
@@ -357,22 +306,12 @@ func (ms *Microservice) saveShaderSource10(message schema.Message) {
 		)
 
 		schema.FillStatusForMessage(&responseMessage, schema.NOT_FOUND)
-		ms.bus.SendMessage(responseMessage)
-		return
+
+		return responseMessage
 	}
 
-	if schema.EntityType(dbEntity.Type) != schema.SHADER {
-		ms.log.Warn(
-			logger.Message{
-				ShortMessage: fmt.Sprintf("entity by id [ %v ] is not a shader", dbEntity.ID),
-				UserId:       message.Meta.UserId,
-				WsId:         message.Meta.WsId,
-			},
-		)
-
-		schema.FillStatusForMessage(&responseMessage, schema.BAD_REQUEST)
-		ms.bus.SendMessage(responseMessage)
-		return
+	if !ms.dbEntityTypeIs(dbEntity, schema.SHADER, message.Meta, &responseMessage) {
+		return responseMessage
 	}
 
 	var vertexShader sql.NullString
@@ -418,8 +357,8 @@ func (ms *Microservice) saveShaderSource10(message schema.Message) {
 		)
 
 		schema.FillStatusForMessage(&responseMessage, schema.INTERNAL_ERROR)
-		ms.bus.SendMessage(responseMessage)
-		return
+
+		return responseMessage
 	}
 
 	ms.log.Info(
@@ -431,5 +370,6 @@ func (ms *Microservice) saveShaderSource10(message schema.Message) {
 	)
 
 	schema.FillStatusForMessage(&responseMessage, schema.OK)
-	ms.bus.SendMessage(responseMessage)
+
+	return responseMessage
 }
