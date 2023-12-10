@@ -23,6 +23,6 @@ WHERE
 
 -- name: DeleteShaderProgramById :exec
 DELETE FROM
-	root.entities
+	root.shader_programs
 WHERE
 	id = $1;
