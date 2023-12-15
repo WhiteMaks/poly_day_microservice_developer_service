@@ -75,4 +75,4 @@ jobs:
           curl \
             -X POST https://api.telegram.org/bot${{secrets.TELEGRAM_BOT_TOKEN}}/sendMessage?chat_id=${{secrets.TELEGRAM_CHAT_ID}} \
             --header "Content-Type:application/json" \
-            --data '{"text":"Service: microservice-developer-service\nVersion: ${{github.ref_name}}\nRelease: Failed"\nTriggered by: ${{github.event.pusher.email}}}'
+            --data '{"text":"Service: microservice-developer-service\nVersion: ${{github.ref_name}}\nRelease: Failed\nTriggered by: ${{github.event.pusher.email}}"}'
