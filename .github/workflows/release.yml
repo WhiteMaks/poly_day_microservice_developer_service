@@ -71,4 +71,8 @@ jobs:
 
       - name: Result
         if: ${{ failure() }}
-        run: curl -X POST https://api.telegram.org/bot${{secrets.TELEGRAM_BOT_TOKEN}}/sendMessage?chat_id=${{secrets.TELEGRAM_CHAT_ID}} --header "Content-Type:application/json" --data '{"text":"fail"}'
+        run: |
+          curl \
+            -X POST https://api.telegram.org/bot${{secrets.TELEGRAM_BOT_TOKEN}}/sendMessage?chat_id=${{secrets.TELEGRAM_CHAT_ID}} \
+            --header "Content-Type:application/json" \
+            --data '{"text":"fail"}'
