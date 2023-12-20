@@ -218,7 +218,7 @@ func (ms *Microservice) createShaderProgram10(message schema.Message) schema.Mes
 
 	ms.log.Info(
 		logger.Message{
-			ShortMessage: fmt.Sprintf("the shader program creation process is complete. Added shader program [ %v ]", dbEntity.ID),
+			ShortMessage: fmt.Sprintf("the shader program creation process is complete. Added shader program [ %v ]", dbShaderProgram.ID),
 			UserId:       message.Meta.UserId,
 			WsId:         message.Meta.WsId,
 		},
