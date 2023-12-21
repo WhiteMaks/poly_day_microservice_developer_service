@@ -76,7 +76,62 @@ func (ms *Microservice) getShaderPrograms10(message schema.Message) schema.Messa
 	shaderProgramsBody := make([]schema.ShaderProgram, len(dbShaderPrograms))
 
 	for i, value := range dbShaderPrograms {
-		shaderProgramsBody[i] = schema.GenerateShaderProgramStruct(value.ID, value.Name, value.ShaderEntityID)
+		dbShaderSource, err := ms.store.GetShaderSourceByEntityId(context.Background(), value.ShaderEntityID)
+		if err != nil {
+			ms.log.Warn(
+				logger.Message{
+					ShortMessage: "error when searching shader source in the database",
+					FullMessage:  err.Error(),
+					UserId:       message.Meta.UserId,
+					WsId:         message.Meta.WsId,
+				},
+			)
+
+			schema.FillStatusForMessage(&responseMessage, schema.INTERNAL_ERROR)
+
+			return responseMessage
+		}
+
+		dbShaderProgramObjects, err := ms.store.GetShaderProgramObjectsByShaderProgramId(context.Background(), value.ID)
+		if err != nil {
+			ms.log.Warn(
+				logger.Message{
+					ShortMessage: "error when searching shader program objects in the database",
+					FullMessage:  err.Error(),
+					UserId:       message.Meta.UserId,
+					WsId:         message.Meta.WsId,
+				},
+			)
+
+			schema.FillStatusForMessage(&responseMessage, schema.INTERNAL_ERROR)
+
+			return responseMessage
+		}
+
+		shaderProgramCode := schema.GenerateShaderProgramCodeStruct(dbShaderSource.EntityID, dbShaderSource.VertexShader.String, dbShaderSource.GeometryShader.String, dbShaderSource.FragmentShader.String)
+		shaderProgramObjects := make([]schema.ShaderProgramObject, len(dbShaderProgramObjects))
+
+		for j, shaderProgramObject := range dbShaderProgramObjects {
+			modelEntity, err := ms.store.GetEntityById(context.Background(), shaderProgramObject.ModelEntityID)
+			if err != nil {
+				ms.log.Warn(
+					logger.Message{
+						ShortMessage: "error when searching model entity in the database",
+						FullMessage:  err.Error(),
+						UserId:       message.Meta.UserId,
+						WsId:         message.Meta.WsId,
+					},
+				)
+
+				schema.FillStatusForMessage(&responseMessage, schema.INTERNAL_ERROR)
+
+				return responseMessage
+			}
+
+			shaderProgramObjects[j] = schema.GenerateShaderProgramObjectStruct(shaderProgramObject.ID, shaderProgramObject.ModelEntityID, modelEntity.Name)
+		}
+
+		shaderProgramsBody[i] = schema.GenerateShaderProgramStruct(value.ID, value.Name, shaderProgramCode, shaderProgramObjects)
 	}
 
 	err = schema.FillBodyGetShaderPrograms10ResponseForMessage(shaderProgramsBody, &responseMessage)

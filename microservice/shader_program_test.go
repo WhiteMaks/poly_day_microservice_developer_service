@@ -1,6 +1,7 @@
 package microservice
 
 import (
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"github.com/WhiteMaks/poly_day_bus_schema/schema"
@@ -26,7 +27,7 @@ func TestMicroservice_GetShaderPrograms10(t *testing.T) {
 	dbShaderProgram := generateRandomDBShaderProgram(dbRelease.ID, dbShaderEntity.ID)
 	dbShaderPrograms := []database.RootShaderProgram{dbShaderProgram}
 
-	testMicroserviceGetShaderProgramsMockDB(store, dbDeveloper, dbRelease, dbShaderPrograms)
+	testMicroserviceGetShaderProgramsMockDB(store, dbDeveloper, dbRelease, dbShaderEntity, dbShaderPrograms)
 
 	requestMessage := prepareRequestMessage(dbDeveloper.UserID)
 	body := schema.GetShaderPrograms10Request{
@@ -40,7 +41,8 @@ func TestMicroservice_GetShaderPrograms10(t *testing.T) {
 	expectedMessage := schema.Message{}
 	expectedShaderPrograms := make([]schema.ShaderProgram, len(dbShaderPrograms))
 	for i, value := range dbShaderPrograms {
-		expectedShaderPrograms[i] = schema.GenerateShaderProgramStruct(value.ID, value.Name, value.ShaderEntityID)
+		expectedShaderProgramCode := schema.GenerateShaderProgramCodeStruct(dbShaderEntity.ID, "", "", "")
+		expectedShaderPrograms[i] = schema.GenerateShaderProgramStruct(value.ID, value.Name, expectedShaderProgramCode, []schema.ShaderProgramObject{})
 	}
 	err = schema.FillBodyGetShaderPrograms10ResponseForMessage(expectedShaderPrograms, &expectedMessage)
 	assert.NoError(t, err, "Error must be nil")
@@ -533,7 +535,7 @@ func testMicroserviceGetShaderProgramsErrorReleaseMockDB(store *mockdatabase.Moc
 		Return(database.RootRelease{}, errors.New("unexpected error"))
 }
 
-func testMicroserviceGetShaderProgramsMockDB(store *mockdatabase.MockStore, dbDeveloper database.RootDeveloper, dbRelease database.RootRelease, dbShaderPrograms []database.RootShaderProgram) {
+func testMicroserviceGetShaderProgramsMockDB(store *mockdatabase.MockStore, dbDeveloper database.RootDeveloper, dbRelease database.RootRelease, dbShaderEntityId database.RootEntity, dbShaderPrograms []database.RootShaderProgram) {
 	store.EXPECT().
 		GetDeveloperById(
 			gomock.Any(),
@@ -554,6 +556,42 @@ func testMicroserviceGetShaderProgramsMockDB(store *mockdatabase.MockStore, dbDe
 			gomock.Eq(dbRelease.ID),
 		).Times(1).
 		Return(dbShaderPrograms, nil)
+
+	store.EXPECT().
+		GetShaderSourceByEntityId(
+			gomock.Any(),
+			gomock.Eq(dbShaderEntityId.ID),
+		).Times(1).
+		Return(
+			database.RootShaderSource{
+				ID: 1,
+				GeometryShader: sql.NullString{
+					String: "",
+					Valid:  true,
+				},
+				FragmentShader: sql.NullString{
+					String: "",
+					Valid:  true,
+				},
+				VertexShader: sql.NullString{
+					String: "",
+					Valid:  true,
+				},
+				EntityID:  dbShaderEntityId.ID,
+				UpdatedAt: time.Now(),
+				CreatedAt: time.Now(),
+			},
+			nil,
+		)
+
+	for _, value := range dbShaderPrograms {
+		store.EXPECT().
+			GetShaderProgramObjectsByShaderProgramId(
+				gomock.Any(),
+				gomock.Eq(value.ID),
+			).Times(1).
+			Return([]database.RootShaderProgramObject{}, nil)
+	}
 }
 
 func testMicroserviceCreateShaderProgramErrorMockDB(store *mockdatabase.MockStore, dbDeveloper database.RootDeveloper, dbRelease database.RootRelease, dbShaderEntity database.RootEntity) {
