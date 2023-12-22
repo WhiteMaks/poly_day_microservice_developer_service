@@ -267,6 +267,12 @@ func (ms *Microservice) rootMessageHandler(message schema.Message) {
 			go ms.bus.SendMessage(ms.createShaderProgramObject10(message))
 			break
 		}
+
+	case schema.CommandDeleteShaderProgramObject10:
+		{
+			go ms.bus.SendMessage(ms.deleteShaderProgramObject10(message))
+			break
+		}
 	}
 }
 
