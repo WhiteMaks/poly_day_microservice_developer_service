@@ -127,3 +127,81 @@ func (ms *Microservice) createShaderProgramObject10(message schema.Message) sche
 
 	return responseMessage
 }
+
+func (ms *Microservice) deleteShaderProgramObject10(message schema.Message) schema.Message {
+	ms.log.Info(
+		logger.Message{
+			ShortMessage: "the process of deleting a shader program object has begun",
+			FullMessage:  string(message.Body),
+			UserId:       message.Meta.UserId,
+			WsId:         message.Meta.WsId,
+		},
+	)
+
+	responseMessage := schema.GenerateResponseMessage(message)
+
+	err := ms.checkUser("the user was denied permission to delete a shader program object", message.Meta, &responseMessage)
+	if err != nil {
+		return responseMessage
+	}
+
+	requestBody, err := schema.GetDeleteShaderProgramObject10RequestFromMessage(message)
+	if err != nil {
+		ms.log.Warn(
+			logger.Message{
+				ShortMessage: "invalid request body for delete shader program object",
+				FullMessage:  err.Error(),
+				UserId:       message.Meta.UserId,
+				WsId:         message.Meta.WsId,
+			},
+		)
+
+		schema.FillStatusForMessage(&responseMessage, schema.BAD_REQUEST)
+
+		return responseMessage
+	}
+
+	dbShaderProgramObject, err := ms.store.GetShaderProgramObjectById(context.Background(), requestBody.ID)
+	if err != nil {
+		ms.log.Warn(
+			logger.Message{
+				ShortMessage: "error when searching shader program object in the database",
+				FullMessage:  err.Error(),
+				UserId:       message.Meta.UserId,
+				WsId:         message.Meta.WsId,
+			},
+		)
+
+		schema.FillStatusForMessage(&responseMessage, schema.NOT_FOUND)
+
+		return responseMessage
+	}
+
+	err = ms.store.DeleteShaderProgramObjectById(context.Background(), dbShaderProgramObject.ID)
+	if err != nil {
+		ms.log.Error(
+			logger.Message{
+				ShortMessage: "error when deleting a shader program object in the database",
+				FullMessage:  err.Error(),
+				UserId:       message.Meta.UserId,
+				WsId:         message.Meta.WsId,
+			},
+		)
+
+		schema.FillStatusForMessage(&responseMessage, schema.INTERNAL_ERROR)
+
+		return responseMessage
+	}
+
+	ms.log.Info(
+		logger.Message{
+			ShortMessage: fmt.Sprintf("the shader program object deletion process is complete. Deleted shader program object [ %v ]", dbShaderProgramObject.ID),
+			UserId:       message.Meta.UserId,
+			WsId:         message.Meta.WsId,
+		},
+	)
+
+	schema.FillStatusForMessage(&responseMessage, schema.OK)
+
+	return responseMessage
+}
