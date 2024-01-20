@@ -227,6 +227,116 @@ func TestMicroservice_CreateEntity10_MUSIC(t *testing.T) {
 	checkSuccessResponse(t, expectedMessage, actualMessage)
 }
 
+func TestMicroservice_CreateEntity10_NOT_AUTHORIZED(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	store := mockdatabase.NewMockStore(ctrl)
+	ms := newMs(store)
+
+	dbDeveloper := generateRandomDBDeveloper()
+	dbEntity := generateRandomDBMusicEntity()
+
+	testMicroserviceUserNotExistMockDB(store, dbDeveloper)
+
+	requestMessage := prepareRequestMessage(dbDeveloper.UserID)
+	body := schema.CreateEntity10Request{
+		Name:           dbEntity.Name,
+		Type:           schema.EntityType(dbEntity.Type),
+		ParentEntityId: dbEntity.ParentEntityID,
+	}
+	bodyBytes, err := json.Marshal(body)
+	assert.NoError(t, err, "Error must be nil")
+	requestMessage.Body = bodyBytes
+
+	actualMessage := ms.createEntity10(requestMessage)
+
+	checkResponseWithoutBody(t, requestMessage, actualMessage)
+	checkErrorResponse(t, schema.NOT_AUTHORIZED, actualMessage)
+}
+
+func TestMicroservice_CreateEntity10_BAD_REQUEST(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	store := mockdatabase.NewMockStore(ctrl)
+	ms := newMs(store)
+
+	dbDeveloper := generateRandomDBDeveloper()
+	dbEntity := generateRandomDBMusicEntity()
+
+	testMicroserviceCreateEntityBadRequestMockDB(store, dbDeveloper)
+
+	requestMessage := prepareRequestMessage(dbDeveloper.UserID)
+	body := schema.CreateEntity10Request{
+		Name:           dbEntity.Name,
+		Type:           "NOT EXIST ENTITY TYPE",
+		ParentEntityId: dbEntity.ParentEntityID,
+	}
+	bodyBytes, err := json.Marshal(body)
+	assert.NoError(t, err, "Error must be nil")
+	requestMessage.Body = bodyBytes
+
+	actualMessage := ms.createEntity10(requestMessage)
+
+	checkResponseWithoutBody(t, requestMessage, actualMessage)
+	checkErrorResponse(t, schema.BAD_REQUEST, actualMessage)
+}
+
+func TestMicroservice_CreateEntity10_INTERNAL_ERROR(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	store := mockdatabase.NewMockStore(ctrl)
+	ms := newMs(store)
+
+	dbDeveloper := generateRandomDBDeveloper()
+	dbEntity := generateRandomDBMusicEntity()
+
+	testMicroserviceCreateEntityErrorMockDB(store, dbDeveloper)
+
+	requestMessage := prepareRequestMessage(dbDeveloper.UserID)
+	body := schema.CreateEntity10Request{
+		Name:           dbEntity.Name,
+		Type:           schema.EntityType(dbEntity.Type),
+		ParentEntityId: dbEntity.ParentEntityID,
+	}
+	bodyBytes, err := json.Marshal(body)
+	assert.NoError(t, err, "Error must be nil")
+	requestMessage.Body = bodyBytes
+
+	actualMessage := ms.createEntity10(requestMessage)
+
+	checkResponseWithoutBody(t, requestMessage, actualMessage)
+	checkErrorResponse(t, schema.INTERNAL_ERROR, actualMessage)
+}
+
+func testMicroserviceCreateEntityErrorMockDB(store *mockdatabase.MockStore, dbDeveloper database.RootDeveloper) {
+	store.EXPECT().
+		GetDeveloperById(
+			gomock.Any(),
+			gomock.Eq(dbDeveloper.UserID),
+		).Times(1).
+		Return(dbDeveloper, nil)
+
+	store.EXPECT().
+		CreateEntity(
+			gomock.Any(),
+			gomock.Any(),
+		).
+		Times(1).
+		Return(database.RootEntity{}, errors.New("unexpected error"))
+}
+
+func testMicroserviceCreateEntityBadRequestMockDB(store *mockdatabase.MockStore, dbDeveloper database.RootDeveloper) {
+	store.EXPECT().
+		GetDeveloperById(
+			gomock.Any(),
+			gomock.Eq(dbDeveloper.UserID),
+		).Times(1).
+		Return(dbDeveloper, nil)
+}
+
 func testMicroserviceCreateEntityMockDB(store *mockdatabase.MockStore, dbDeveloper database.RootDeveloper, dbEntity database.RootEntity) {
 	store.EXPECT().
 		GetDeveloperById(
