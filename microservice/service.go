@@ -30,6 +30,8 @@ func NewMs(store database.Store, bus *wbus.Rabbit, log *logger.PolyDayLogger) *M
 }
 
 func (ms *Microservice) Start() error {
+	//todo init handlers into map by name and method
+
 	err := ms.bus.SubscribeOnQueue(ms.bus.Name, ms.rootMessageHandler)
 	if err != nil {
 		return err
@@ -178,6 +180,8 @@ func (ms *Microservice) rootMessageHandler(message schema.Message) {
 		},
 	)
 
+	//todo get handler from map by method name
+
 	switch methodName {
 
 	case schema.CommandCreateRelease10:
@@ -258,6 +262,17 @@ func (ms *Microservice) rootMessageHandler(message schema.Message) {
 			break
 		}
 
+	case schema.CommandCreateShaderProgramObject10:
+		{
+			go ms.bus.SendMessage(ms.createShaderProgramObject10(message))
+			break
+		}
+
+	case schema.CommandDeleteShaderProgramObject10:
+		{
+			go ms.bus.SendMessage(ms.deleteShaderProgramObject10(message))
+			break
+		}
 	}
 }
 

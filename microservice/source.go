@@ -233,7 +233,7 @@ func (ms *Microservice) getShaderSource10(message schema.Message) schema.Message
 		return responseMessage
 	}
 
-	err = schema.FillBodyGetShaderSource10ResponseForMessage(dbShaderSource.ID, dbShaderSource.VertexShader.String, dbShaderSource.FragmentShader.String, &responseMessage)
+	err = schema.FillBodyGetShaderSource10ResponseForMessage(dbShaderSource.ID, dbShaderSource.VertexShader.String, dbShaderSource.GeometryShader.String, dbShaderSource.FragmentShader.String, &responseMessage)
 	if err != nil {
 		ms.log.Error(
 			logger.Message{
